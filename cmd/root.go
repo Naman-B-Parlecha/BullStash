@@ -15,8 +15,8 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "BullStash",
-	Short: "A brief description of your application",
-	Long:  `Adsadsa.`,
+	Short: "",
+	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		db := db.LoadDb()
 		fmt.Printf("DB: %v", db.Ping())

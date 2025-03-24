@@ -1,8 +1,6 @@
-# Database Backup CLI Utility
+# Database Backup CLI Utility - BullStash
 
 A command-line utility for backing up and restoring various types of databases. Built with Golang, this tool supports multiple DBMS, cloud storage, Discord notifications, and monitoring with Prometheus and Grafana.
-
----
 
 ## Features
 - **Supported DBMS**: MySQL, PostgreSQL, MongoDB, SQLite.
@@ -11,15 +9,122 @@ A command-line utility for backing up and restoring various types of databases. 
 - **Notifications**: Discord webhook integration.
 - **Monitoring**: Prometheus and Grafana for real-time tracking.
 
+## Commands and Flags
+### 1. Backup Command
+```bash
+BullStash backup [flags]
+```
+**Flags:**
+- `--dbtype`: Type of database (e.g., mysql, postgres, mongodb, sqlite).
+- `--host`: Database host (default: localhost).
+- `--port`: Database port (default: 3306 for MySQL, 5432 for PostgreSQL, etc.).
+- `--user`: Database username.
+- `--password`: Database password.
+- `--dbname`: Database name.
+- `--backup-type`: Type of backup (full, incremental, differential).
+- `--output`: Output path for the backup file (default: `./backup.sql`).
+- `--compress`: Enable compression (e.g., gzip) for the backup file.
+- `--storage`: Storage option (local, s3, gcs, azure).
+- `--cloud-bucket`: Cloud storage bucket name (required for cloud storage).
+- `--cloud-region`: Cloud storage region (required for cloud storage).
+
+**Example:**
+```bash
+BullStash backup --dbtype=postgres --host=localhost --port=5432 --user=myuser --password=mypassword --dbname=mydb --backup-type=full --output=./backup.sql --compress --storage=s3 --cloud-bucket=mybucket --cloud-region=us-east-1
+```
+
+### 2. Restore Command
+```bash
+BullStash restore [flags]
+```
+**Flags:**
+- `--dbtype`: Type of database (e.g., mysql, postgres, mongodb, sqlite).
+- `--host`: Database host (default: localhost).
+- `--port`: Database port (default: 3306 for MySQL, 5432 for PostgreSQL, etc.).
+- `--user`: Database username.
+- `--password`: Database password.
+- `--dbname`: Database name.
+- `--input`: Path to the backup file (e.g., `./backup.sql`).
+- `--storage`: Storage option (local, s3, gcs, azure).
+- `--cloud-bucket`: Cloud storage bucket name (required for cloud storage).
+- `--cloud-region`: Cloud storage region (required for cloud storage).
+- `--selective`: Enable selective restore (e.g., specific tables or collections).
+
+**Example:**
+```bash
+BullStash restore --dbtype=postgres --host=localhost --port=5432 --user=myuser --password=mypassword --dbname=mydb --input=./backup.sql --storage=s3 --cloud-bucket=mybucket --cloud-region=us-east-1
+```
+
+### 3. Schedule Command
+```bash
+BullStash schedule [flags]
+```
+**Flags:**
+- `--dbtype`: Type of database (e.g., mysql, postgres, mongodb, sqlite).
+- `--cron`: Cron expression for scheduling (e.g., `0 2 * * *` for daily at 2 AM).
+- `--backup-type`: Type of backup (full, incremental, differential).
+- `--storage`: Storage option (local, s3, gcs, azure).
+- `--cloud-bucket`: Cloud storage bucket name (required for cloud storage).
+- `--cloud-region`: Cloud storage region (required for cloud storage).
+
+**Example:**
+```bash
+BullStash schedule --dbtype=mysql --cron="0 2 * * *" --backup-type=full --storage=s3 --cloud-bucket=mybucket --cloud-region=us-east-1
+```
+
+### 4. Test Command
+```bash
+BullStash test [flags]
+```
+**Flags:**
+- `--dbtype`: Type of database (e.g., mysql, postgres, mongodb, sqlite).
+- `--host`: Database host (default: localhost).
+- `--port`: Database port (default: 3306 for MySQL, 5432 for PostgreSQL, etc.).
+- `--user`: Database username.
+- `--password`: Database password.
+- `--dbname`: Database name.
+
+**Example:**
+```bash
+BullStash test --dbtype=postgres --host=localhost --port=5432 --user=myuser --password=mypassword --dbname=mydb
+```
+
+### 5. Monitor Command
+```bash
+BullStash monitor [flags]
+```
+**Flags:**
+- `--prometheus-port`: Port for exposing Prometheus metrics (default: 9090).
+- `--grafana-dashboard`: Path to Grafana dashboard configuration file.
+
+**Example:**
+```bash
+BullStash monitor --prometheus-port=9090 --grafana-dashboard=./grafana/dashboard.json
+```
+
+### 6. Notify Command
+```bash
+BullStash notify [flags]
+```
+**Flags:**
+- `--discord-webhook`: Discord webhook URL for notifications.
+- `--slack-webhook`: Slack webhook URL for notifications (optional).
+
+**Example:**
+```bash
+BullStash notify --discord-webhook=https://discord.com/api/webhooks/your-webhook-url
+```
+
 ---
 
 ## Milestones
 
 ### **Milestone 1: Core Functionality**
-- [ ] Implement basic CLI structure using Golang.
-- [ ] Add support for connecting to MySQL and PostgreSQL.
-- [ ] Implement full backup functionality for supported databases.
-- [ ] Add local storage option for backup files.
+- [X] Implement basic CLI structure using Golang.
+- [X] Add support for connecting PostgreSQL.
+- [ ] Add support for connecting to MySQL
+- [X] Implement full backup functionality for supported databases.
+- [X] Add local storage option for backup files.
 - [ ] Implement basic error handling and logging.
 
 ### **Milestone 2: Advanced Backup Features**
@@ -59,3 +164,6 @@ A command-line utility for backing up and restoring various types of databases. 
 
 ---
 
+#### Maybe add Encryption like Rishabh bhaiya thought us will be cool 
+
+---

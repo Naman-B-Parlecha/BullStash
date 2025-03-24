@@ -14,6 +14,18 @@ type Config struct {
 	DBNAME   string
 }
 
+func GetPostgresConfig() *Config {
+	godotenv.Load()
+
+	return &Config{
+		HOST:     GetEnv("POSTGRES_DB_HOST", "localhost"),
+		PORT:     GetEnv("POSTGRES_DB_PORT", "5432"),
+		USER:     GetEnv("POSTGRES_DB_USER", "postgres"),
+		PASSWORD: GetEnv("POSTGRES_DB_PASSWORD", "password"),
+		DBNAME:   GetEnv("POSTGRES_DB_NAME", "postgres"),
+	}
+}
+
 func GetConfig() *Config {
 	godotenv.Load()
 
