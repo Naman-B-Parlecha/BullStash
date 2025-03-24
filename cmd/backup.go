@@ -31,10 +31,14 @@ var backupCmd = &cobra.Command{
 			return
 		}
 
+		fmt.Println("Generating a backup script file...")
+		time.Sleep(1 * time.Second)
+
+		// i will add encryption to this later ig at end :)
 		backupFile := fmt.Sprintf("%s/%sbackup_%s.sql", output, postgres_config.DBNAME, time.Now().UTC().Local())
 
-		fmt.Println("Backup of " + dbtype + " database is stored in " + backupFile)
-
+		fmt.Println("Executing Dump command...")
+		time.Sleep(1 * time.Second)
 		command := exec.Command("pg_dump",
 			"-h", postgres_config.HOST,
 			"-p", postgres_config.PORT,
@@ -50,8 +54,10 @@ var backupCmd = &cobra.Command{
 			fmt.Println("Something went wrong in the backup :", err.Error())
 			return
 		}
+		fmt.Println("Backup Successful")
 
 		fmt.Println(string(outputDetails))
+		fmt.Println("Backup of " + dbtype + " database is stored in " + backupFile)
 
 	},
 }

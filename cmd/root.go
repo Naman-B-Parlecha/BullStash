@@ -18,7 +18,7 @@ var rootCmd = &cobra.Command{
 	Short: "",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		db := db.LoadDb()
+		db := db.LoadPostgresDb()
 		fmt.Printf("DB: %v", db.Ping())
 	},
 

@@ -10,7 +10,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func LoadDb() *sql.DB {
+func LoadPostgresDb() *sql.DB {
 	var conf config.Config
 	conf = *config.GetConfig()
 

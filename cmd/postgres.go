@@ -23,6 +23,10 @@ var postgresCmd = &cobra.Command{
 		name, _ := cmd.Flags().GetString("dbname")
 		port, _ := cmd.Flags().GetInt("port")
 
+		if name == "" {
+			fmt.Println("Enter a valid Dabtabase Name")
+			return
+		}
 		fmt.Println("Kindly Confirm the following details :"+"\n"+"Host: "+host+"\n"+"Password: "+password+"\n"+"User: "+user+"\n"+"Name: "+name+"\n"+"Port: ", port, "\n\nEnter y/n to confirm")
 
 		var confirm string
@@ -39,7 +43,7 @@ var postgresCmd = &cobra.Command{
 		}
 
 		file.WriteString("POSTGRES_DB_HOST=" + host + "\n" + "POSTGRES_DB_PORT=" + strconv.Itoa(port) + "\n" + "POSTGRES_DB_USER=" + user + "\n" + "POSTGRES_DB_PASSWORD=" + password + "\n" + "POSTGRES_DB_NAME=" + name)
-		file.Close()
+		defer file.Close()
 	},
 }
 

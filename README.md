@@ -125,7 +125,7 @@ BullStash notify --discord-webhook=https://discord.com/api/webhooks/your-webhook
 - [ ] Add support for connecting to MySQL
 - [X] Implement full backup functionality for supported databases.
 - [X] Add local storage option for backup files.
-- [ ] Implement basic error handling and logging.
+- [X] Implement basic error handling and logging.
 
 ### **Milestone 2: Advanced Backup Features**
 - [ ] Add support for MongoDB and SQLite.
