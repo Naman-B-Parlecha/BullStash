@@ -7,9 +7,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
 	"time"
 
-	"github.com/Naman-B-Parlecha/BullStash/config"
+	"github.com/Naman-B-Parlecha/BullStash/util"
 	"github.com/spf13/cobra"
 )
 
@@ -19,54 +20,86 @@ var backupCmd = &cobra.Command{
 	Short: "",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-
-		var postgres_config config.Config
-		postgres_config = *config.GetPostgresConfig()
-
 		dbtype, _ := cmd.Flags().GetString("dbtype")
+		host, _ := cmd.Flags().GetString("host")
+		port, _ := cmd.Flags().GetInt("port")
+		user, _ := cmd.Flags().GetString("user")
+		password, _ := cmd.Flags().GetString("password")
+		dbname, _ := cmd.Flags().GetString("dbname")
+		// backupType, _ := cmd.Flags().GetString("backup-type")
 		output, _ := cmd.Flags().GetString("output")
+		compress, _ := cmd.Flags().GetBool("compress")
+		// storage, _ := cmd.Flags().GetString("storage")
+		// cloudBucket, _ := cmd.Flags().GetString("cloud-bucket")
+		// cloudRegion, _ := cmd.Flags().GetString("cloud-region")
+
+		if dbtype != "postgres" {
+			fmt.Printf("Unsupported database type: %s\n", dbtype)
+			return
+		}
 
 		if err := os.MkdirAll(output, 0755); err != nil {
-			fmt.Errorf("failed to create output directory: %v", err.Error())
+			fmt.Printf("Failed to create output directory: %v\n", err)
 			return
 		}
 
-		fmt.Println("Generating a backup script file...")
-		time.Sleep(1 * time.Second)
+		timestamp := time.Now().Format("20060102_150405")
+		fileName := fmt.Sprintf("%s/%s_backup_%s.sql", output, dbname, timestamp)
+		gzFileName := fileName + ".gz"
 
-		// i will add encryption to this later ig at end :)
-		backupFile := fmt.Sprintf("%s/%sbackup_%s.sql", output, postgres_config.DBNAME, time.Now().UTC().Local())
-
-		fmt.Println("Executing Dump command...")
-		time.Sleep(1 * time.Second)
-		command := exec.Command("pg_dump",
-			"-h", postgres_config.HOST,
-			"-p", postgres_config.PORT,
-			"-U", postgres_config.USER,
-			"-d", postgres_config.DBNAME,
-			"-f", backupFile)
-
-		command.Env = append(command.Env, fmt.Sprintf("PGPASSWORD=%s", postgres_config.PASSWORD))
-
-		outputDetails, err := command.CombinedOutput()
-
+		sqlFile, err := os.Create(fileName)
 		if err != nil {
-			fmt.Println("Something went wrong in the backup :", err.Error())
+			fmt.Printf("Failed to create backup file: %v\n", err)
 			return
 		}
-		fmt.Println("Backup Successful")
+		defer sqlFile.Close()
 
-		fmt.Println(string(outputDetails))
-		fmt.Println("Backup of " + dbtype + " database is stored in " + backupFile)
+		dumpCmd := exec.Command("pg_dump",
+			"-h", host,
+			"-p", strconv.Itoa(port),
+			"-U", user,
+			"-d", dbname)
+		dumpCmd.Env = append(os.Environ(), "PGPASSWORD="+password)
+		dumpCmd.Stdout = sqlFile
 
+		if err := dumpCmd.Run(); err != nil {
+			fmt.Printf("pg_dump failed: %v\n", err)
+			os.Remove(fileName)
+			return
+		}
+
+		if compress {
+			if err := util.CompressFile(fileName, gzFileName); err != nil {
+				fmt.Printf("Compression failed: %v\n", err)
+				return
+			}
+			if err := os.Remove(fileName); err != nil {
+				fmt.Printf("Warning: could not remove uncompressed file: %v\n", err)
+			}
+
+			fmt.Printf("Backup successfully created at: %s\n", gzFileName)
+			return
+		}
+
+		fmt.Printf("Backup successfully created at: %s\n", fileName)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(backupCmd)
-
 	backupCmd.Flags().String("dbtype", "postgres", "Type of database")
-	backupCmd.Flags().String("output", "backup.sql", "Path you want to store the backup")
+	backupCmd.Flags().String("host", "localhost", "Host of the database")
+	backupCmd.Flags().Int("port", 5432, "Port of the database")
+	backupCmd.Flags().String("user", "postgres", "User of the database")
+	backupCmd.Flags().String("password", "password", "Password of the database")
+	backupCmd.Flags().String("dbname", "postgres", "Name of the database")
+	backupCmd.Flags().String("backup-type", "full", "Type of backup such as full, incremental, differential")
+	backupCmd.Flags().String("output", "backup", "Path you want to store the backup")
+	backupCmd.Flags().Bool("compress", false, "Compress the backup file")
+	backupCmd.Flags().String("storage", "local", "Storage type such as local, s3, gcs, goodle_drive")
+	backupCmd.Flags().String("cloud-bucket", "", "Cloud bucket name")
+	backupCmd.Flags().String("cloud-region", "asia-pacific-1", "Cloud region")
+
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
