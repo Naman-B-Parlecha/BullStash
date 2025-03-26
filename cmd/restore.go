@@ -1,11 +1,12 @@
 /*
 Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
 	"fmt"
+	"os/exec"
+	"strconv"
 
 	"github.com/spf13/cobra"
 )
@@ -14,19 +15,49 @@ import (
 var restoreCmd = &cobra.Command{
 	Use:   "restore",
 	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("restore called")
+		dbtype, _ := cmd.Flags().GetString("dbtype")
+		host, _ := cmd.Flags().GetString("host")
+		port, _ := cmd.Flags().GetInt("port")
+		user, _ := cmd.Flags().GetString("user")
+		password, _ := cmd.Flags().GetString("password")
+		dbname, _ := cmd.Flags().GetString("dbname")
+		input, _ := cmd.Flags().GetString("input")
+
+		if dbtype != "postgres" {
+			fmt.Printf("Unsupported database type: %s\n", dbtype)
+			return
+		}
+
+		fmt.Printf("Restoring database %s from %s\n", dbname, input)
+		restoreCmd := exec.Command("psql",
+			"-h", host,
+			"-p", strconv.Itoa(port),
+			"-U", user,
+			"-d", dbname,
+			"-f", input)
+
+		restoreCmd.Env = append(restoreCmd.Env, "PGPASSWORD="+password)
+
+		if err := restoreCmd.Run(); err != nil {
+			fmt.Printf("Failed to restore database: %v\n", err)
+			return
+		}
+
+		fmt.Println("Database restored successfully")
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(restoreCmd)
+	restoreCmd.Flags().String("dbtype", "postgres", "Database type")
+	restoreCmd.Flags().String("host", "localhost", "Database host")
+	restoreCmd.Flags().Int("port", 5432, "Database port")
+	restoreCmd.Flags().String("user", "postgres", "Database user")
+	restoreCmd.Flags().String("password", "", "Database password")
+	restoreCmd.Flags().String("dbname", "", "Database name")
+	restoreCmd.Flags().String("input", "", "Input file")
 
 	// Here you will define your flags and configuration settings.
 

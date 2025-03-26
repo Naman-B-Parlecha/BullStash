@@ -130,8 +130,9 @@ BullStash notify --discord-webhook=https://discord.com/api/webhooks/your-webhook
 ### **Milestone 2: Advanced Backup Features**
 - [ ] Add support for MongoDB and SQLite.
 - [ ] Implement incremental and differential backups.
-- [ ] Add compression for backup files (e.g., using gzip).
+- [X] Add compression for backup files (e.g., using gzip).
 - [ ] Implement connection testing for databases.
+- [X] Implement Restore command
 
 ### **Milestone 3: Cloud Integration**
 - [ ] Add support for cloud storage (AWS S3, Google Cloud Storage, Azure Blob Storage).
