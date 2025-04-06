@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Naman-B-Parlecha/BullStash/db"
-
 	"github.com/spf13/cobra"
 )
 
@@ -18,8 +16,7 @@ var rootCmd = &cobra.Command{
 	Short: "",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		db := db.LoadPostgresDb()
-		fmt.Printf("DB: %v", db.Ping())
+		fmt.Println("Welcome to BullStash! A CLI tool for managing your database backups and restores.")
 	},
 
 	// Uncomment the following line if your bare application

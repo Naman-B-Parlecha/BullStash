@@ -3,25 +3,14 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"os"
-	"strconv"
 
-	"github.com/Naman-B-Parlecha/BullStash/config"
 	_ "github.com/lib/pq"
 )
 
-func LoadPostgresDb() *sql.DB {
-	var conf config.Config
-	conf = *config.GetConfig()
-
-	port, err := strconv.Atoi(conf.PORT)
-	if err != nil {
-		fmt.Println("Error parsing port")
-		os.Exit(1)
-	}
+func LoadPostgresDb(port int, dbname string, host string, user string, password string) (*sql.DB, error) {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
-		conf.HOST, port, conf.USER, conf.PASSWORD, conf.DBNAME)
+		host, port, user, password, dbname)
 
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
@@ -34,6 +23,5 @@ func LoadPostgresDb() *sql.DB {
 		panic(err)
 	}
 
-	fmt.Println("Successfully connected!")
-	return db
+	return db, nil
 }

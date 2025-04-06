@@ -25,6 +25,8 @@ var restoreCmd = &cobra.Command{
 		dbname, _ := cmd.Flags().GetString("dbname")
 		input, _ := cmd.Flags().GetString("input")
 
+		// iscompressed := strings.Contains(input, ".gz")
+
 		if dbtype != "postgres" {
 			fmt.Printf("Unsupported database type: %s\n", dbtype)
 			return
