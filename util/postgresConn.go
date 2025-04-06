@@ -1,10 +1,8 @@
-package db
+package util
 
 import (
 	"database/sql"
 	"fmt"
-
-	_ "github.com/lib/pq"
 )
 
 func LoadPostgresDb(port int, dbname string, host string, user string, password string) (*sql.DB, error) {

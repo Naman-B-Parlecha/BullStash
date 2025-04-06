@@ -131,7 +131,7 @@ BullStash notify --discord-webhook=https://discord.com/api/webhooks/your-webhook
 - [ ] Add support for MongoDB and SQLite.
 - [ ] Implement incremental and differential backups.
 - [X] Add compression for backup files (e.g., using gzip).
-- [ ] Implement connection testing for databases.
+- [X] Implement connection testing for databases.
 - [X] Implement Restore command
 
 ### **Milestone 3: Cloud Integration**

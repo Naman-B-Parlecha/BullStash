@@ -6,7 +6,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/Naman-B-Parlecha/BullStash/db"
+	"github.com/Naman-B-Parlecha/BullStash/util"
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +26,7 @@ var testCmd = &cobra.Command{
 
 		if dbtype == "postgres" {
 
-			db, err := db.LoadPostgresDb(port, dbname, host, user, password)
+			db, err := util.LoadPostgresDb(port, dbname, host, user, password)
 			if err != nil {
 				fmt.Printf("Failed to connect to database: %v\n", err)
 				return
