@@ -1,11 +1,13 @@
 /*
 Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -21,12 +23,92 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("schedule called")
+		dbType, _ := cmd.Flags().GetString("dbtype")
+		backupType, _ := cmd.Flags().GetString("backuptype")
+		outputDir, _ := cmd.Flags().GetString("output")
+		cron, _ := cmd.Flags().GetString("cron")
+
+		fmt.Println("Kindly put your values in env variables so that we can fetch from there")
+		fmt.Print("Do you want to continue? (y/n): ")
+		var answer string
+		fmt.Scanln(&answer)
+
+		if answer != "y" && answer != "Y" {
+			fmt.Println("Operation cancelled")
+			return
+		}
+
+		projectDir, err := os.Getwd()
+		if err != nil {
+			fmt.Println("Error getting current directory:", err)
+			return
+		}
+
+		for _, dir := range []string{"cron_job", "cron_logs", outputDir} {
+			if err := os.MkdirAll(dir, 0755); err != nil && !os.IsExist(err) {
+				fmt.Printf("Error creating directory %s: %v\n", dir, err)
+				return
+			}
+		}
+
+		scriptPath := filepath.Join(projectDir, "cron_job", "backup_cron_job.sh")
+		file, err := os.Create(scriptPath)
+		if err != nil {
+			fmt.Println("Error creating script file:", err)
+			return
+		}
+		defer file.Close()
+
+		scriptContent := fmt.Sprintf(`#!/bin/bash
+cd "%s" || exit 1
+
+echo "[$(date)] Starting BullStash backup..." >> "%s/cron_logs/backup.log"
+
+BullStash backup --dbtype %s --backup-type %s --output "%s" \
+    >> "%s/cron_logs/backup.log" 2>&1
+
+echo "[$(date)] Backup completed." >> "%s/cron_logs/backup.log"
+`,
+			projectDir, projectDir, dbType, backupType, outputDir, projectDir, projectDir)
+
+		if _, err := file.WriteString(scriptContent); err != nil {
+			fmt.Println("Error writing to file:", err)
+			return
+		}
+
+		if err := os.Chmod(scriptPath, 0755); err != nil {
+			fmt.Println("Error changing file permissions:", err)
+			return
+		}
+
+		if cron == "" {
+			cron = "* * * * *"
+		}
+
+		cronEntry := fmt.Sprintf("%s cd \"%s\" && \"%s\" >> \"%s/cron_logs/backup.log\" 2>&1",
+			cron, projectDir, scriptPath, projectDir)
+
+		addCronCmd := exec.Command("bash", "-c",
+			fmt.Sprintf(`(crontab -l 2>/dev/null; echo "%s") | crontab -`, cronEntry))
+
+		if output, err := addCronCmd.CombinedOutput(); err != nil {
+			fmt.Printf("Failed to add cron job: %v\n", err)
+			fmt.Printf("Command output: %s\n", string(output))
+			return
+		}
+
+		fmt.Println("Successfully scheduled backup with cron expression:", cron)
+		fmt.Println("Script location:", scriptPath)
+		fmt.Println("Logs will be written to:", filepath.Join(projectDir, "cron_logs/backup.log"))
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(scheduleCmd)
+	scheduleCmd.Flags().String("cron", "", "Cron expression for scheduling the backup")
+	scheduleCmd.Flags().String("dbtype", "postgres", "Type of database to backup")
+	scheduleCmd.Flags().String("backuptype", "full", "Type of backup to perform (full/incremental)")
+	scheduleCmd.Flags().String("output", "", "Output directory for the backup files")
 
 	// Here you will define your flags and configuration settings.
 

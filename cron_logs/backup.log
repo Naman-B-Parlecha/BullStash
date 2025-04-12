@@ -1,0 +1,9 @@
+[Mon Apr 14 02:12:01 AM IST 2025] Starting BullStash backup...
+Required parameter 'host' not provided and environment variable POSTGRES_DB_HOST not set
+[Mon Apr 14 02:12:01 AM IST 2025] Backup completed.
+[Mon Apr 14 02:13:01 AM IST 2025] Starting BullStash backup...
+Required parameter 'password' not provided and environment variable POSTGRES_DB_PASSWORD not set
+[Mon Apr 14 02:13:01 AM IST 2025] Backup completed.
+[Mon Apr 14 02:14:01 AM IST 2025] Starting BullStash backup...
+Required parameter 'user' not provided and environment variable POSTGRES_DB_USER not set
+[Mon Apr 14 02:14:01 AM IST 2025] Backup completed.
