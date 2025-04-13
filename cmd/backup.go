@@ -20,22 +20,56 @@ var backupCmd = &cobra.Command{
 	Short: "",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
+		// Get flags
 		dbtype, _ := cmd.Flags().GetString("dbtype")
 		host, _ := cmd.Flags().GetString("host")
 		port, _ := cmd.Flags().GetInt("port")
 		user, _ := cmd.Flags().GetString("user")
 		password, _ := cmd.Flags().GetString("password")
 		dbname, _ := cmd.Flags().GetString("dbname")
-		// backupType, _ := cmd.Flags().GetString("backup-type")
 		output, _ := cmd.Flags().GetString("output")
 		compress, _ := cmd.Flags().GetBool("compress")
-		// storage, _ := cmd.Flags().GetString("storage")
-		// cloudBucket, _ := cmd.Flags().GetString("cloud-bucket")
-		// cloudRegion, _ := cmd.Flags().GetString("cloud-region")
 
 		if dbtype != "postgres" {
-			fmt.Printf("Unsupported database type: %s\n", dbtype)
+			fmt.Fprintf(os.Stderr, "Unsupported database type: %s\n", dbtype)
 			return
+		}
+
+		// will make util file and put this in there later T-T
+		envVars := map[string]struct {
+			value    *string
+			envKey   string
+			required bool
+		}{
+			"host":     {&host, "POSTGRES_DB_HOST", true},
+			"user":     {&user, "POSTGRES_DB_USER", true},
+			"password": {&password, "POSTGRES_DB_PASSWORD", true},
+			"dbname":   {&dbname, "POSTGRES_DB_NAME", false},
+		}
+
+		for name, config := range envVars {
+			if *config.value == "" {
+				*config.value = os.Getenv(config.envKey)
+				if *config.value == "" && config.required {
+					fmt.Fprintf(os.Stderr, "Required parameter '%s' not provided and environment variable %s not set\n",
+						name, config.envKey)
+					return
+				}
+			}
+		}
+
+		if port == 0 {
+			portStr := os.Getenv("POSTGRES_DB_PORT")
+			if portStr != "" {
+				var err error
+				port, err = strconv.Atoi(portStr)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Invalid port in environment variable: %v\n", err)
+					return
+				}
+			} else {
+				port = 5432
+			}
 		}
 
 		if err := os.MkdirAll(output, 0755); err != nil {
@@ -88,10 +122,10 @@ var backupCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(backupCmd)
 	backupCmd.Flags().String("dbtype", "postgres", "Type of database")
-	backupCmd.Flags().String("host", "localhost", "Host of the database")
-	backupCmd.Flags().Int("port", 5432, "Port of the database")
-	backupCmd.Flags().String("user", "postgres", "User of the database")
-	backupCmd.Flags().String("password", "password", "Password of the database")
+	backupCmd.Flags().String("host", "", "Host of the database")
+	backupCmd.Flags().Int("port", 0, "Port of the database")
+	backupCmd.Flags().String("user", "", "User of the database")
+	backupCmd.Flags().String("password", "", "Password of the database")
 	backupCmd.Flags().String("dbname", "postgres", "Name of the database")
 	backupCmd.Flags().String("backup-type", "full", "Type of backup such as full, incremental, differential")
 	backupCmd.Flags().String("output", "backup", "Path you want to store the backup")
