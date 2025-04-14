@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"time"
 
+	"github.com/Naman-B-Parlecha/BullStash/internal/config"
 	"github.com/Naman-B-Parlecha/BullStash/util"
 	"github.com/spf13/cobra"
 )
@@ -29,50 +31,30 @@ var backupCmd = &cobra.Command{
 		dbname, _ := cmd.Flags().GetString("dbname")
 		output, _ := cmd.Flags().GetString("output")
 		compress, _ := cmd.Flags().GetBool("compress")
+		isCron, _ := cmd.Flags().GetBool("isCron")
 
 		if dbtype != "postgres" {
 			fmt.Fprintf(os.Stderr, "Unsupported database type: %s\n", dbtype)
 			return
 		}
 
-		// will make util file and put this in there later T-T
-		envVars := map[string]struct {
-			value    *string
-			envKey   string
-			required bool
-		}{
-			"host":     {&host, "POSTGRES_DB_HOST", true},
-			"user":     {&user, "POSTGRES_DB_USER", true},
-			"password": {&password, "POSTGRES_DB_PASSWORD", true},
-			"dbname":   {&dbname, "POSTGRES_DB_NAME", false},
+		if isCron {
+			postgresConfig := config.GetPostgresConfig()
+			host = postgresConfig.HOST
+			port, _ = strconv.Atoi(postgresConfig.PORT)
+			user = postgresConfig.USER
+			password = postgresConfig.PASSWORD
+			dbname = postgresConfig.DBNAME
 		}
 
-		for name, config := range envVars {
-			if *config.value == "" {
-				*config.value = os.Getenv(config.envKey)
-				if *config.value == "" && config.required {
-					fmt.Fprintf(os.Stderr, "Required parameter '%s' not provided and environment variable %s not set\n",
-						name, config.envKey)
-					return
-				}
-			}
-		}
+		projectDir, err := os.Getwd()
 
-		if port == 0 {
-			portStr := os.Getenv("POSTGRES_DB_PORT")
-			if portStr != "" {
-				var err error
-				port, err = strconv.Atoi(portStr)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "Invalid port in environment variable: %v\n", err)
-					return
-				}
-			} else {
-				port = 5432
-			}
+		if err != nil {
+			fmt.Printf("Error getting current directory: %v\n", err)
+			return
 		}
-
-		if err := os.MkdirAll(output, 0755); err != nil {
+		folderName := filepath.Join(projectDir, output)
+		if err := os.MkdirAll(folderName, 0755); err != nil {
 			fmt.Printf("Failed to create output directory: %v\n", err)
 			return
 		}
@@ -128,12 +110,12 @@ func init() {
 	backupCmd.Flags().String("password", "", "Password of the database")
 	backupCmd.Flags().String("dbname", "postgres", "Name of the database")
 	backupCmd.Flags().String("backup-type", "full", "Type of backup such as full, incremental, differential")
-	backupCmd.Flags().String("output", "backup", "Path you want to store the backup")
+	backupCmd.Flags().String("output", "backups", "Path you want to store the backup")
 	backupCmd.Flags().Bool("compress", false, "Compress the backup file")
 	backupCmd.Flags().String("storage", "local", "Storage type such as local, s3, gcs, goodle_drive")
 	backupCmd.Flags().String("cloud-bucket", "", "Cloud bucket name")
 	backupCmd.Flags().String("cloud-region", "asia-pacific-1", "Cloud region")
-
+	backupCmd.Flags().Bool("isCron", false, "Is this a cron job")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command

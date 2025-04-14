@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/joho/godotenv"
 	"gopkg.in/yaml.v3"
 )
 
@@ -59,4 +60,32 @@ func (c *Config) GetConnConfig() (*pgx.ConnConfig, error) {
 	)
 
 	return pgx.ParseConfig(connStr)
+}
+
+type PostgresConfig struct {
+	HOST     string
+	PORT     string
+	USER     string
+	PASSWORD string
+	DBNAME   string
+}
+
+func GetPostgresConfig() *PostgresConfig {
+	godotenv.Load()
+
+	return &PostgresConfig{
+		HOST:     GetEnv("POSTGRES_DB_HOST", "localhost"),
+		PORT:     GetEnv("POSTGRES_DB_PORT", "5432"),
+		USER:     GetEnv("POSTGRES_DB_USER", "postgres"),
+		PASSWORD: GetEnv("POSTGRES_DB_PASSWORD", "password"),
+		DBNAME:   GetEnv("POSTGRES_DB_NAME", "postgres"),
+	}
+}
+
+func GetEnv(variableName string, defaultValue string) string {
+	val, exists := os.LookupEnv(variableName)
+	if exists {
+		return val
+	}
+	return defaultValue
 }

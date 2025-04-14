@@ -23,9 +23,10 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Scheduling a backup job...")
 		dbType, _ := cmd.Flags().GetString("dbtype")
 		backupType, _ := cmd.Flags().GetString("backuptype")
-		outputDir, _ := cmd.Flags().GetString("output")
+		// outputDir, _ := cmd.Flags().GetString("output")
 		cron, _ := cmd.Flags().GetString("cron")
 
 		fmt.Println("Kindly put your values in env variables so that we can fetch from there")
@@ -44,9 +45,12 @@ to quickly create a Cobra application.`,
 			return
 		}
 
-		for _, dir := range []string{"cron_job", "cron_logs", outputDir} {
-			if err := os.MkdirAll(dir, 0755); err != nil && !os.IsExist(err) {
-				fmt.Printf("Error creating directory %s: %v\n", dir, err)
+		fmt.Println("Current directory:", projectDir)
+
+		for _, dir := range []string{"cron_job", "cron_logs"} {
+			dirPath := filepath.Join(projectDir, dir)
+			if err := os.MkdirAll(dirPath, 0755); err != nil && !os.IsExist(err) {
+				fmt.Printf("Error creating directory %s: %v\n", dirPath, err)
 				return
 			}
 		}
@@ -64,12 +68,12 @@ cd "%s" || exit 1
 
 echo "[$(date)] Starting BullStash backup..." >> "%s/cron_logs/backup.log"
 
-BullStash backup --dbtype %s --backup-type %s --output "%s" \
+BullStash backup --dbtype %s --backup-type %s --isCron true \
     >> "%s/cron_logs/backup.log" 2>&1
 
 echo "[$(date)] Backup completed." >> "%s/cron_logs/backup.log"
 `,
-			projectDir, projectDir, dbType, backupType, outputDir, projectDir, projectDir)
+			projectDir, projectDir, dbType, backupType, projectDir, projectDir)
 
 		if _, err := file.WriteString(scriptContent); err != nil {
 			fmt.Println("Error writing to file:", err)
