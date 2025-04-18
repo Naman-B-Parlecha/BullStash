@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/Naman-B-Parlecha/BullStash/util"
 	"github.com/spf13/cobra"
 )
 
@@ -35,12 +36,14 @@ to quickly create a Cobra application.`,
 		fmt.Scanln(&answer)
 
 		if answer != "y" && answer != "Y" {
+			util.CallWebHook("User cancelled the backup scheduling", true)
 			fmt.Println("Operation cancelled")
 			return
 		}
 
 		projectDir, err := os.Getwd()
 		if err != nil {
+			util.CallWebHook("Error getting current directory: "+err.Error(), true)
 			fmt.Println("Error getting current directory:", err)
 			return
 		}
@@ -50,6 +53,7 @@ to quickly create a Cobra application.`,
 		for _, dir := range []string{"cron_job", "cron_logs"} {
 			dirPath := filepath.Join(projectDir, dir)
 			if err := os.MkdirAll(dirPath, 0755); err != nil && !os.IsExist(err) {
+				util.CallWebHook("Error creating directory: "+err.Error(), true)
 				fmt.Printf("Error creating directory %s: %v\n", dirPath, err)
 				return
 			}
@@ -58,6 +62,7 @@ to quickly create a Cobra application.`,
 		scriptPath := filepath.Join(projectDir, "cron_job", "backup_cron_job.sh")
 		file, err := os.Create(scriptPath)
 		if err != nil {
+			util.CallWebHook("Error creating script file: "+err.Error(), true)
 			fmt.Println("Error creating script file:", err)
 			return
 		}
@@ -76,11 +81,13 @@ echo "[$(date)] Backup completed." >> "%s/cron_logs/backup.log"
 			projectDir, projectDir, dbType, backupType, projectDir, projectDir)
 
 		if _, err := file.WriteString(scriptContent); err != nil {
+			util.CallWebHook("Error writing to script file: "+err.Error(), true)
 			fmt.Println("Error writing to file:", err)
 			return
 		}
 
 		if err := os.Chmod(scriptPath, 0755); err != nil {
+			util.CallWebHook("Error changing file permissions: "+err.Error(), true)
 			fmt.Println("Error changing file permissions:", err)
 			return
 		}
@@ -96,11 +103,13 @@ echo "[$(date)] Backup completed." >> "%s/cron_logs/backup.log"
 			fmt.Sprintf(`(crontab -l 2>/dev/null; echo "%s") | crontab -`, cronEntry))
 
 		if output, err := addCronCmd.CombinedOutput(); err != nil {
+			util.CallWebHook("Failed to add cron job: "+err.Error(), true)
 			fmt.Printf("Failed to add cron job: %v\n", err)
 			fmt.Printf("Command output: %s\n", string(output))
 			return
 		}
 
+		util.CallWebHook("Backup job scheduled successfully", false)
 		fmt.Println("Successfully scheduled backup with cron expression:", cron)
 		fmt.Println("Script location:", scriptPath)
 		fmt.Println("Logs will be written to:", filepath.Join(projectDir, "cron_logs/backup.log"))

@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/Naman-B-Parlecha/BullStash/util"
 	"github.com/spf13/cobra"
 )
 
@@ -24,6 +25,7 @@ var postgresCmd = &cobra.Command{
 		port, _ := cmd.Flags().GetInt("port")
 
 		if name == "" {
+			util.CallWebHook("Please enter a valid database name", true)
 			fmt.Println("Enter a valid Dabtabase Name")
 			return
 		}
@@ -33,17 +35,20 @@ var postgresCmd = &cobra.Command{
 		fmt.Scanln(&confirm)
 
 		if confirm == "n" {
+			util.CallWebHook("User cancelled the database setup", true)
 			return
 		}
 
 		file, err := os.Create(".env")
 
 		if err != nil {
+			util.CallWebHook("Failed to save your database details, try again", true)
 			fmt.Println("Failed to save your database details, try again")
 		}
 
 		file.WriteString("POSTGRES_DB_HOST=" + host + "\n" + "POSTGRES_DB_PORT=" + strconv.Itoa(port) + "\n" + "POSTGRES_DB_USER=" + user + "\n" + "POSTGRES_DB_PASSWORD=" + password + "\n" + "POSTGRES_DB_NAME=" + name)
 		defer file.Close()
+		util.CallWebHook("Database details saved successfully", false)
 	},
 }
 

@@ -28,9 +28,11 @@ var testCmd = &cobra.Command{
 
 			db, err := util.LoadPostgresDb(port, dbname, host, user, password)
 			if err != nil {
+				util.CallWebHook("Failed to connect to database: "+err.Error(), true)
 				fmt.Printf("Failed to connect to database: %v\n", err)
 				return
 			}
+			util.CallWebHook("Database is connected successfully", false)
 			fmt.Printf("Database is connected successfully\n")
 			defer db.Close()
 		}

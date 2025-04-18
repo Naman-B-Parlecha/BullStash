@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strconv"
 
+	"github.com/Naman-B-Parlecha/BullStash/util"
 	"github.com/spf13/cobra"
 )
 
@@ -28,6 +29,7 @@ var restoreCmd = &cobra.Command{
 		// iscompressed := strings.Contains(input, ".gz")
 
 		if dbtype != "postgres" {
+			util.CallWebHook("Unsupported database type: "+dbtype, true)
 			fmt.Printf("Unsupported database type: %s\n", dbtype)
 			return
 		}
@@ -43,10 +45,12 @@ var restoreCmd = &cobra.Command{
 		restoreCmd.Env = append(restoreCmd.Env, "PGPASSWORD="+password)
 
 		if err := restoreCmd.Run(); err != nil {
+			util.CallWebHook("Failed to restore database: "+err.Error(), true)
 			fmt.Printf("Failed to restore database: %v\n", err)
 			return
 		}
 
+		util.CallWebHook("Database restored successfully", false)
 		fmt.Println("Database restored successfully")
 	},
 }

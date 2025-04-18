@@ -34,6 +34,7 @@ var backupCmd = &cobra.Command{
 		isCron, _ := cmd.Flags().GetBool("isCron")
 
 		if dbtype != "postgres" {
+			util.CallWebHook("Unsupported database type: "+dbtype, true)
 			fmt.Fprintf(os.Stderr, "Unsupported database type: %s\n", dbtype)
 			return
 		}
@@ -50,11 +51,13 @@ var backupCmd = &cobra.Command{
 		projectDir, err := os.Getwd()
 
 		if err != nil {
+			util.CallWebHook("Error getting current directory: "+err.Error(), true)
 			fmt.Printf("Error getting current directory: %v\n", err)
 			return
 		}
 		folderName := filepath.Join(projectDir, output)
 		if err := os.MkdirAll(folderName, 0755); err != nil {
+			util.CallWebHook("Error creating output directory: "+err.Error(), true)
 			fmt.Printf("Failed to create output directory: %v\n", err)
 			return
 		}
@@ -65,6 +68,7 @@ var backupCmd = &cobra.Command{
 
 		sqlFile, err := os.Create(fileName)
 		if err != nil {
+			util.CallWebHook("Error creating backup file: "+err.Error(), true)
 			fmt.Printf("Failed to create backup file: %v\n", err)
 			return
 		}
@@ -79,6 +83,7 @@ var backupCmd = &cobra.Command{
 		dumpCmd.Stdout = sqlFile
 
 		if err := dumpCmd.Run(); err != nil {
+			util.CallWebHook("pg_dump failed: "+err.Error(), true)
 			fmt.Printf("pg_dump failed: %v\n", err)
 			os.Remove(fileName)
 			return
@@ -90,13 +95,16 @@ var backupCmd = &cobra.Command{
 				return
 			}
 			if err := os.Remove(fileName); err != nil {
+				util.CallWebHook("Error removing uncompressed file: "+err.Error(), true)
 				fmt.Printf("Warning: could not remove uncompressed file: %v\n", err)
 			}
 
+			util.CallWebHook("Backup created successfully at: "+gzFileName, false)
 			fmt.Printf("Backup successfully created at: %s\n", gzFileName)
 			return
 		}
 
+		util.CallWebHook("Backup created successfully at: "+fileName, false)
 		fmt.Printf("Backup successfully created at: %s\n", fileName)
 	},
 }
