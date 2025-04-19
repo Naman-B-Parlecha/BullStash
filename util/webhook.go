@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 const (
@@ -44,7 +46,19 @@ func SendToDiscord(webhook string, message *DiscordMessage) error {
 }
 
 func CallWebHook(text string, isError bool) {
-	webhookURL := os.Getenv("DISCORD_WEBHOOK_URL")
+	if err := godotenv.Load(); err != nil {
+		fmt.Println("No .env file found")
+	}
+	webhookURL, exists := os.LookupEnv("DISCORD_WEBHOOK_URL")
+
+	if !exists {
+		fmt.Printf("discord webhook not set")
+	}
+
+	if webhookURL == "" {
+		fmt.Println("Discord webhook URL is empty. Skipping webhook call.")
+		return
+	}
 
 	color := ColorGreen
 	title := "Success"

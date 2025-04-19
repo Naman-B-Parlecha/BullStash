@@ -55,13 +55,14 @@ var backupCmd = &cobra.Command{
 		if dbtype == "mysql" {
 			// will implement mysql backup logic here
 		}
+		util.CallWebHook("successful", false)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(backupCmd)
 	backupCmd.Flags().String("dbtype", "postgres", "Type of database")
-	backupCmd.Flags().String("host", "", "Host of the database")
+	backupCmd.Flags().String("host", "localhost", "Host of the database")
 	backupCmd.Flags().Int("port", 0, "Port of the database")
 	backupCmd.Flags().String("user", "", "User of the database")
 	backupCmd.Flags().String("password", "", "Password of the database")
