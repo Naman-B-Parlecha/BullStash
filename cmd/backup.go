@@ -69,7 +69,6 @@ var backupCmd = &cobra.Command{
 				fmt.Printf("Error creating backup: %v\n", err)
 			}
 		}
-		util.CallWebHook("successful", false)
 	},
 }
 
