@@ -5,9 +5,8 @@ package cmd
 
 import (
 	"fmt"
-	"os/exec"
-	"strconv"
 
+	"github.com/Naman-B-Parlecha/BullStash/postgres"
 	"github.com/Naman-B-Parlecha/BullStash/util"
 	"github.com/spf13/cobra"
 )
@@ -28,30 +27,23 @@ var restoreCmd = &cobra.Command{
 
 		// iscompressed := strings.Contains(input, ".gz")
 
-		if dbtype != "postgres" {
-			util.CallWebHook("Unsupported database type: "+dbtype, true)
-			fmt.Printf("Unsupported database type: %s\n", dbtype)
+		if dbtype == "" {
+			util.CallWebHook("Please enter a valid database type", true)
+			fmt.Println("Enter a valid Database Type")
 			return
 		}
 
-		fmt.Printf("Restoring database %s from %s\n", dbname, input)
-		restoreCmd := exec.Command("psql",
-			"-h", host,
-			"-p", strconv.Itoa(port),
-			"-U", user,
-			"-d", dbname,
-			"-f", input)
-
-		restoreCmd.Env = append(restoreCmd.Env, "PGPASSWORD="+password)
-
-		if err := restoreCmd.Run(); err != nil {
-			util.CallWebHook("Failed to restore database: "+err.Error(), true)
-			fmt.Printf("Failed to restore database: %v\n", err)
-			return
+		if dbname == "postgres" {
+			err := postgres.Restore(dbname, input, host, user, password, port)
+			if err != nil {
+				util.CallWebHook("Error restoring database: "+err.Error(), true)
+				fmt.Printf("Error restoring database: %v\n", err)
+			}
 		}
 
-		util.CallWebHook("Database restored successfully", false)
-		fmt.Println("Database restored successfully")
+		if dbtype == "mysql" {
+			// will implement mysql restore logic here
+		}
 	},
 }
 

@@ -48,6 +48,7 @@ func CallWebHook(text string, isError bool) {
 
 	color := ColorGreen
 	title := "Success"
+
 	if isError {
 		color = ColorRed
 		title = "Error"

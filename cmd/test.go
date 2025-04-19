@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/Naman-B-Parlecha/BullStash/postgres"
 	"github.com/Naman-B-Parlecha/BullStash/util"
 	"github.com/spf13/cobra"
 )
@@ -25,16 +26,18 @@ var testCmd = &cobra.Command{
 		dbname, _ := cmd.Flags().GetString("dbname")
 
 		if dbtype == "postgres" {
-
-			db, err := util.LoadPostgresDb(port, dbname, host, user, password)
+			err := postgres.TestConnection(port, dbname, host, user, password)
 			if err != nil {
-				util.CallWebHook("Failed to connect to database: "+err.Error(), true)
-				fmt.Printf("Failed to connect to database: %v\n", err)
-				return
+				util.CallWebHook("Error connecting to database: "+err.Error(), true)
+				fmt.Printf("Error connecting to database: %v\n", err)
+			} else {
+				util.CallWebHook("Database connection successful", false)
+				fmt.Println("Database connection successful")
 			}
-			util.CallWebHook("Database is connected successfully", false)
-			fmt.Printf("Database is connected successfully\n")
-			defer db.Close()
+		}
+		if dbtype == "mysql" {
+			// will implement mysql test connection logic here
+
 		}
 
 	},

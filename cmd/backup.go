@@ -5,13 +5,10 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
-	"path/filepath"
 	"strconv"
-	"time"
 
 	"github.com/Naman-B-Parlecha/BullStash/internal/config"
+	"github.com/Naman-B-Parlecha/BullStash/postgres"
 	"github.com/Naman-B-Parlecha/BullStash/util"
 	"github.com/spf13/cobra"
 )
@@ -22,7 +19,6 @@ var backupCmd = &cobra.Command{
 	Short: "",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Get flags
 		dbtype, _ := cmd.Flags().GetString("dbtype")
 		host, _ := cmd.Flags().GetString("host")
 		port, _ := cmd.Flags().GetInt("port")
@@ -33,79 +29,32 @@ var backupCmd = &cobra.Command{
 		compress, _ := cmd.Flags().GetBool("compress")
 		isCron, _ := cmd.Flags().GetBool("isCron")
 
-		if dbtype != "postgres" {
-			util.CallWebHook("Unsupported database type: "+dbtype, true)
-			fmt.Fprintf(os.Stderr, "Unsupported database type: %s\n", dbtype)
+		if dbtype == "" {
+			util.CallWebHook("Please enter a valid database type", true)
+			fmt.Println("Enter a valid Database Type")
 			return
 		}
 
-		if isCron {
-			postgresConfig := config.GetPostgresConfig()
-			host = postgresConfig.HOST
-			port, _ = strconv.Atoi(postgresConfig.PORT)
-			user = postgresConfig.USER
-			password = postgresConfig.PASSWORD
-			dbname = postgresConfig.DBNAME
-		}
-
-		projectDir, err := os.Getwd()
-
-		if err != nil {
-			util.CallWebHook("Error getting current directory: "+err.Error(), true)
-			fmt.Printf("Error getting current directory: %v\n", err)
-			return
-		}
-		folderName := filepath.Join(projectDir, output)
-		if err := os.MkdirAll(folderName, 0755); err != nil {
-			util.CallWebHook("Error creating output directory: "+err.Error(), true)
-			fmt.Printf("Failed to create output directory: %v\n", err)
-			return
-		}
-
-		timestamp := time.Now().Format("20060102_150405")
-		fileName := fmt.Sprintf("%s/%s_backup_%s.sql", output, dbname, timestamp)
-		gzFileName := fileName + ".gz"
-
-		sqlFile, err := os.Create(fileName)
-		if err != nil {
-			util.CallWebHook("Error creating backup file: "+err.Error(), true)
-			fmt.Printf("Failed to create backup file: %v\n", err)
-			return
-		}
-		defer sqlFile.Close()
-
-		dumpCmd := exec.Command("pg_dump",
-			"-h", host,
-			"-p", strconv.Itoa(port),
-			"-U", user,
-			"-d", dbname)
-		dumpCmd.Env = append(os.Environ(), "PGPASSWORD="+password)
-		dumpCmd.Stdout = sqlFile
-
-		if err := dumpCmd.Run(); err != nil {
-			util.CallWebHook("pg_dump failed: "+err.Error(), true)
-			fmt.Printf("pg_dump failed: %v\n", err)
-			os.Remove(fileName)
-			return
-		}
-
-		if compress {
-			if err := util.CompressFile(fileName, gzFileName); err != nil {
-				fmt.Printf("Compression failed: %v\n", err)
-				return
-			}
-			if err := os.Remove(fileName); err != nil {
-				util.CallWebHook("Error removing uncompressed file: "+err.Error(), true)
-				fmt.Printf("Warning: could not remove uncompressed file: %v\n", err)
+		if dbname == "postgres" {
+			if isCron {
+				postgresConfig := config.GetPostgresConfig()
+				host = postgresConfig.HOST
+				port, _ = strconv.Atoi(postgresConfig.PORT)
+				user = postgresConfig.USER
+				password = postgresConfig.PASSWORD
+				dbname = postgresConfig.DBNAME
 			}
 
-			util.CallWebHook("Backup created successfully at: "+gzFileName, false)
-			fmt.Printf("Backup successfully created at: %s\n", gzFileName)
-			return
+			err := postgres.Backup(output, dbname, host, user, password, port, compress)
+			if err != nil {
+				util.CallWebHook("Error creating backup: "+err.Error(), true)
+				fmt.Printf("Error creating backup: %v\n", err)
+			}
 		}
 
-		util.CallWebHook("Backup created successfully at: "+fileName, false)
-		fmt.Printf("Backup successfully created at: %s\n", fileName)
+		if dbtype == "mysql" {
+			// will implement mysql backup logic here
+		}
 	},
 }
 

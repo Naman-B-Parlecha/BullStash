@@ -48,9 +48,7 @@ to quickly create a Cobra application.`,
 			return
 		}
 
-		fmt.Println("Current directory:", projectDir)
-
-		for _, dir := range []string{"cron_job", "cron_logs"} {
+		for _, dir := range []string{"cron_job_" + dbType, "cron_logs_" + dbType} {
 			dirPath := filepath.Join(projectDir, dir)
 			if err := os.MkdirAll(dirPath, 0755); err != nil && !os.IsExist(err) {
 				util.CallWebHook("Error creating directory: "+err.Error(), true)
@@ -59,7 +57,7 @@ to quickly create a Cobra application.`,
 			}
 		}
 
-		scriptPath := filepath.Join(projectDir, "cron_job", "backup_cron_job.sh")
+		scriptPath := filepath.Join(projectDir, "cron_job_"+dbType, "backup_cron_job.sh")
 		file, err := os.Create(scriptPath)
 		if err != nil {
 			util.CallWebHook("Error creating script file: "+err.Error(), true)
@@ -71,14 +69,14 @@ to quickly create a Cobra application.`,
 		scriptContent := fmt.Sprintf(`#!/bin/bash
 cd "%s" || exit 1
 
-echo "[$(date)] Starting BullStash backup..." >> "%s/cron_logs/backup.log"
+echo "[$(date)] Starting BullStash backup..." >> "%s/cron_logs_%s/backup.log"
 
 BullStash backup --dbtype %s --backup-type %s --isCron true \
-    >> "%s/cron_logs/backup.log" 2>&1
+    >> "%s/cron_logs_%s/backup.log" 2>&1
 
-echo "[$(date)] Backup completed." >> "%s/cron_logs/backup.log"
+echo "[$(date)] Backup completed." >> "%s/cron_logs_%s/backup.log"
 `,
-			projectDir, projectDir, dbType, backupType, projectDir, projectDir)
+			projectDir, projectDir, dbType, dbType, backupType, projectDir, dbType, projectDir, dbType)
 
 		if _, err := file.WriteString(scriptContent); err != nil {
 			util.CallWebHook("Error writing to script file: "+err.Error(), true)
@@ -96,8 +94,8 @@ echo "[$(date)] Backup completed." >> "%s/cron_logs/backup.log"
 			cron = "* * * * *"
 		}
 
-		cronEntry := fmt.Sprintf("%s cd \"%s\" && \"%s\" >> \"%s/cron_logs/backup.log\" 2>&1",
-			cron, projectDir, scriptPath, projectDir)
+		cronEntry := fmt.Sprintf("%s cd \"%s\" && \"%s\" >> \"%s/cron_logs_%s/backup.log\" 2>&1",
+			cron, projectDir, scriptPath, projectDir, dbType)
 
 		addCronCmd := exec.Command("bash", "-c",
 			fmt.Sprintf(`(crontab -l 2>/dev/null; echo "%s") | crontab -`, cronEntry))
@@ -112,7 +110,7 @@ echo "[$(date)] Backup completed." >> "%s/cron_logs/backup.log"
 		util.CallWebHook("Backup job scheduled successfully", false)
 		fmt.Println("Successfully scheduled backup with cron expression:", cron)
 		fmt.Println("Script location:", scriptPath)
-		fmt.Println("Logs will be written to:", filepath.Join(projectDir, "cron_logs/backup.log"))
+		fmt.Println("Logs will be written to:", filepath.Join(projectDir, fmt.Sprintf("cron_logs_%s/backup.log", dbType)))
 	},
 }
 
