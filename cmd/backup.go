@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/Naman-B-Parlecha/BullStash/internal/config"
+	"github.com/Naman-B-Parlecha/BullStash/mysql"
 	"github.com/Naman-B-Parlecha/BullStash/postgres"
 	"github.com/Naman-B-Parlecha/BullStash/util"
 	"github.com/spf13/cobra"
@@ -53,7 +54,20 @@ var backupCmd = &cobra.Command{
 		}
 
 		if dbtype == "mysql" {
-			// will implement mysql backup logic here
+			fmt.Println("Creating backup for MySQL database")
+			if isCron {
+				mysqlConfig := config.GetMySqlConfig()
+				user = mysqlConfig.USER
+				password = mysqlConfig.PASSWORD
+				dbname = mysqlConfig.DBNAME
+			}
+
+			err := mysql.Backup(output, dbname, user, password, compress)
+
+			if err != nil {
+				util.CallWebHook("Error creating backup: "+err.Error(), true)
+				fmt.Printf("Error creating backup: %v\n", err)
+			}
 		}
 		util.CallWebHook("successful", false)
 	},

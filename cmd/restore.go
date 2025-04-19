@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/Naman-B-Parlecha/BullStash/mysql"
 	"github.com/Naman-B-Parlecha/BullStash/postgres"
 	"github.com/Naman-B-Parlecha/BullStash/util"
 	"github.com/spf13/cobra"
@@ -42,7 +43,11 @@ var restoreCmd = &cobra.Command{
 		}
 
 		if dbtype == "mysql" {
-			// will implement mysql restore logic here
+			err := mysql.Restore(dbname, input, user, password)
+			if err != nil {
+				util.CallWebHook("Error restoring database: "+err.Error(), true)
+				fmt.Printf("Error restoring database: %v\n", err)
+			}
 		}
 	},
 }

@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/Naman-B-Parlecha/BullStash/mysql"
 	"github.com/Naman-B-Parlecha/BullStash/postgres"
 	"github.com/Naman-B-Parlecha/BullStash/util"
 	"github.com/spf13/cobra"
@@ -36,8 +37,14 @@ var testCmd = &cobra.Command{
 			}
 		}
 		if dbtype == "mysql" {
-			// will implement mysql test connection logic here
-
+			err := mysql.TestConnection(dbname, user, password)
+			if err != nil {
+				util.CallWebHook("Error connecting to database: "+err.Error(), true)
+				fmt.Printf("Error connecting to database: %v\n", err)
+			} else {
+				util.CallWebHook("Database connection successful", false)
+				fmt.Println("Database connection successful")
+			}
 		}
 
 	},
