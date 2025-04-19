@@ -1,6 +1,0 @@
-[Tue Apr 15 12:19:01 AM IST 2025] Starting BullStash backup...
-Backup successfully created at: backups/bullstash_postgres_backup_20250415_001901.sql
-[Tue Apr 15 12:19:01 AM IST 2025] Backup completed.
-[Tue Apr 15 12:20:01 AM IST 2025] Starting BullStash backup...
-Backup successfully created at: backups/bullstash_postgres_backup_20250415_002001.sql
-[Tue Apr 15 12:20:01 AM IST 2025] Backup completed.

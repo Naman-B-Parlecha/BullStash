@@ -137,10 +137,10 @@ BullStash notify --discord-webhook=https://discord.com/api/webhooks/your-webhook
 ### **Milestone 3: Cloud Integration**
 - [ ] Add support for cloud storage (AWS S3, Google Cloud Storage, Azure Blob Storage).
 - [ ] Implement configuration file for storing cloud credentials and settings.
-- [ ] Add functionality to schedule backups using cron-like syntax.
+- [X] Add functionality to schedule backups using cron-like syntax.
 
 ### **Milestone 4: Notifications and Monitoring**
-- [ ] Integrate Discord webhooks for backup status notifications.
+- [X] Integrate Discord webhooks for backup status notifications.
 - [ ] Add Prometheus metrics for monitoring backup operations.
 - [ ] Set up Grafana dashboards for visualizing backup performance and status.
 

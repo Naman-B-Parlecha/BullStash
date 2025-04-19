@@ -13,11 +13,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// postgresCmd represents the postgres command
-var postgresCmd = &cobra.Command{
-	Use:   "postgres",
-	Short: "",
-	Long:  ``,
+// mysqlCmd represents the mysql command
+var mysqlCmd = &cobra.Command{
+	Use:   "mysql",
+	Short: "A brief description of your command",
+	Long: `A longer description that spans multiple lines and likely contains examples
+and usage of using your command. For example:
+
+Cobra is a CLI library for Go that empowers applications.
+This application is a tool to generate the needed files
+to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		host, _ := cmd.Flags().GetString("host")
 		password, _ := cmd.Flags().GetString("password")
@@ -59,12 +64,11 @@ var postgresCmd = &cobra.Command{
 		if len(existingContent) > 0 && !strings.HasSuffix(existingContent, "\n") {
 			content += "\n\n"
 		}
-
-		content += "POSTGRES_DB_HOST=" + host + "\n"
-		content += "POSTGRES_DB_USER=" + user + "\n"
-		content += "POSTGRES_DB_PASSWORD=" + password + "\n"
-		content += "POSTGRES_DB_NAME=" + name + "\n"
-		content += "POSTGRES_DB_PORT=" + strconv.Itoa(port) + "\n"
+		content += "MYSQL_DB_HOST=" + host + "\n"
+		content += "MYSQL_DB_USER=" + user + "\n"
+		content += "MYSQL_DB_PASSWORD=" + password + "\n"
+		content += "MYSQL_DB_NAME=" + name + "\n"
+		content += "MYSQL_DB_PORT=" + strconv.Itoa(port) + "\n"
 
 		if _, err := file.WriteString(content); err != nil {
 			util.CallWebHook("Failed to write database details to file, try again", true)
@@ -77,21 +81,19 @@ var postgresCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(postgresCmd)
-
-	postgresCmd.Flags().String("host", "localhost", "Host of the database")
-	postgresCmd.Flags().Int("port", 5432, "Port of the database")
-	postgresCmd.Flags().String("dbname", "", "Name of the database")
-	postgresCmd.Flags().String("user", "postgres", "User of the database")
-	postgresCmd.Flags().String("password", "postgres", "Password of the database")
-
+	rootCmd.AddCommand(mysqlCmd)
+	mysqlCmd.Flags().StringP("host", "H", "localhost", "Host of the database")
+	mysqlCmd.Flags().StringP("password", "p", "", "Password of the database")
+	mysqlCmd.Flags().StringP("user", "u", "root", "User of the database")
+	mysqlCmd.Flags().StringP("dbname", "d", "", "Name of the database")
+	mysqlCmd.Flags().IntP("port", "P", 3306, "Port of the database")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// postgresCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// mysqlCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// postgresCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// mysqlCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
