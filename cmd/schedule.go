@@ -30,7 +30,7 @@ to quickly create a Cobra application.`,
 		// outputDir, _ := cmd.Flags().GetString("output")
 		cron, _ := cmd.Flags().GetString("cron")
 
-		fmt.Println("Kindly put your values in env variables so that we can fetch from there")
+		fmt.Println("Kindly put your values in env variables so that we can fetch from there using commands such as BullStash postgres... use --help for more details")
 		fmt.Print("Do you want to continue? (y/n): ")
 		var answer string
 		fmt.Scanln(&answer)

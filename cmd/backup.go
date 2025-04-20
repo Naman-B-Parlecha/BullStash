@@ -72,6 +72,11 @@ var backupCmd = &cobra.Command{
 		}
 
 		if dbtype == "mongo" {
+			if isCron {
+				mongoConfig := config.GetMongoConfig()
+				mongoURI = mongoConfig.MONGO_URI
+				dbname = mongoConfig.DBNAME
+			}
 			err := mongo.Backup(mongoURI, dbname, output, compress)
 			if err != nil {
 				util.CallWebHook("Error creating backup: "+err.Error(), true)
