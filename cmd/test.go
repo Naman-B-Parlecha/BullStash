@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/Naman-B-Parlecha/BullStash/mongo"
 	"github.com/Naman-B-Parlecha/BullStash/mysql"
 	"github.com/Naman-B-Parlecha/BullStash/postgres"
 	"github.com/Naman-B-Parlecha/BullStash/util"
@@ -25,7 +26,7 @@ var testCmd = &cobra.Command{
 		user, _ := cmd.Flags().GetString("user")
 		password, _ := cmd.Flags().GetString("password")
 		dbname, _ := cmd.Flags().GetString("dbname")
-
+		mongoURI, _ := cmd.Flags().GetString("mongo_uri")
 		if dbtype == "postgres" {
 			err := postgres.TestConnection(port, dbname, host, user, password)
 			if err != nil {
@@ -47,6 +48,17 @@ var testCmd = &cobra.Command{
 			}
 		}
 
+		if dbtype == "mongo" {
+			err := mongo.TestConnection(mongoURI)
+			if err != nil {
+				util.CallWebHook("Error connecting to database: "+err.Error(), true)
+				fmt.Printf("Error connecting to database: %v\n", err)
+			} else {
+				util.CallWebHook("Database connection successful", false)
+				fmt.Println("Database connection successful")
+			}
+		}
+
 	},
 }
 
@@ -58,6 +70,7 @@ func init() {
 	testCmd.Flags().String("user", "postgres", "Database user")
 	testCmd.Flags().String("password", "", "Database password")
 	testCmd.Flags().String("dbname", "postgres", "Database name")
+	testCmd.Flags().String("mongo_uri", "", "MongoDB URI")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command

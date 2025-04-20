@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/Naman-B-Parlecha/BullStash/mongo"
 	"github.com/Naman-B-Parlecha/BullStash/mysql"
 	"github.com/Naman-B-Parlecha/BullStash/postgres"
 	"github.com/Naman-B-Parlecha/BullStash/util"
@@ -25,8 +26,9 @@ var restoreCmd = &cobra.Command{
 		password, _ := cmd.Flags().GetString("password")
 		dbname, _ := cmd.Flags().GetString("dbname")
 		input, _ := cmd.Flags().GetString("input")
-
-		// iscompressed := strings.Contains(input, ".gz")
+		mongo_uri, _ := cmd.Flags().GetString("mongo-uri")
+		isDrop, _ := cmd.Flags().GetBool("drop")
+		iscompressed, _ := cmd.Flags().GetBool("IsCompressed")
 
 		if dbtype == "" {
 			util.CallWebHook("Please enter a valid database type", true)
@@ -49,6 +51,14 @@ var restoreCmd = &cobra.Command{
 				fmt.Printf("Error restoring database: %v\n", err)
 			}
 		}
+
+		if dbtype == "mongo" {
+			err := mongo.Restore(mongo_uri, input, isDrop, iscompressed)
+			if err != nil {
+				util.CallWebHook("Error restoring database: "+err.Error(), true)
+				fmt.Printf("Error restoring database: %v\n", err)
+			}
+		}
 	},
 }
 
@@ -61,6 +71,9 @@ func init() {
 	restoreCmd.Flags().String("password", "", "Database password")
 	restoreCmd.Flags().String("dbname", "", "Database name")
 	restoreCmd.Flags().String("input", "", "Input file")
+	restoreCmd.Flags().Bool("drop", true, "do u want to drop ur mongo collections before restore??")
+	restoreCmd.Flags().String("mongo-uri", "", "MongoDB URI that u want to restore to")
+	restoreCmd.Flags().Bool("isCompressed", false, "Is your dump files compressed")
 
 	// Here you will define your flags and configuration settings.
 
