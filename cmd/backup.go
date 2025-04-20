@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/Naman-B-Parlecha/BullStash/internal/config"
+	"github.com/Naman-B-Parlecha/BullStash/mongo"
 	"github.com/Naman-B-Parlecha/BullStash/mysql"
 	"github.com/Naman-B-Parlecha/BullStash/postgres"
 	"github.com/Naman-B-Parlecha/BullStash/util"
@@ -29,7 +30,7 @@ var backupCmd = &cobra.Command{
 		output, _ := cmd.Flags().GetString("output")
 		compress, _ := cmd.Flags().GetBool("compress")
 		isCron, _ := cmd.Flags().GetBool("isCron")
-
+		mongoURI, _ := cmd.Flags().GetString("mongo-uri")
 		if dbtype == "" {
 			util.CallWebHook("Please enter a valid database type", true)
 			fmt.Println("Enter a valid Database Type")
@@ -69,6 +70,15 @@ var backupCmd = &cobra.Command{
 				fmt.Printf("Error creating backup: %v\n", err)
 			}
 		}
+
+		if dbtype == "mongo" {
+			err := mongo.Backup(mongoURI, dbname, output, compress)
+			if err != nil {
+				util.CallWebHook("Error creating backup: "+err.Error(), true)
+				fmt.Printf("Error creating backup: %v\n", err)
+			}
+
+		}
 	},
 }
 
@@ -87,6 +97,8 @@ func init() {
 	backupCmd.Flags().String("cloud-bucket", "", "Cloud bucket name")
 	backupCmd.Flags().String("cloud-region", "asia-pacific-1", "Cloud region")
 	backupCmd.Flags().Bool("isCron", false, "Is this a cron job")
+
+	backupCmd.Flags().String("mongo-uri", "", "MongoDB URI")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
