@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Naman-B-Parlecha/BullStash/util"
+	"github.com/go-resty/resty/v2"
 )
 
 func Backup(output, dbname, user, password string, compress bool) error {
@@ -40,8 +41,9 @@ func Backup(output, dbname, user, password string, compress bool) error {
 
 	dumpCmd := exec.Command("mysqldump",
 		"-u", user,
-		"-p"+password,
+		"--password="+password,
 		dbname)
+
 	dumpCmd.Stdout = sqlFile
 
 	if err := dumpCmd.Run(); err != nil {
@@ -63,8 +65,60 @@ func Backup(output, dbname, user, password string, compress bool) error {
 
 		util.CallWebHook("Backup created successfully at: "+gzFileName, false)
 		fmt.Printf("Backup successfully created at: %s\n", gzFileName)
+
+		client := resty.New()
+		fileInfo, err := os.Stat(gzFileName)
+		if err != nil {
+			fmt.Printf("Error getting file size: %v\n", err)
+		}
+		fileSize := fileInfo.Size()
+
+		_, err = client.R().SetBody(struct {
+			DBType     string  `json:"dbtype"`
+			BackupType string  `json:"backup_type"`
+			Storage    string  `json:"storage"`
+			Size       float64 `json:"size"`
+		}{
+			DBType:     "mysql",
+			BackupType: "full",
+			Storage:    "local",
+			Size:       float64(fileSize),
+		}).Post("http://localhost:8085/backups/size")
+
+		fmt.Println("File size sent to monitoring service:", fileSize)
+		if err != nil {
+			fmt.Println("Error sending request:", err)
+			util.CallWebHook("Error sending request: "+err.Error(), true)
+		}
+
 		return nil
 	}
+
+	client := resty.New()
+	fileInfo, err := os.Stat(fileName)
+	if err != nil {
+		fmt.Printf("Error getting file size: %v\n", err)
+	}
+	fileSize := fileInfo.Size()
+
+	_, err = client.R().SetBody(struct {
+		DBType     string  `json:"dbtype"`
+		BackupType string  `json:"backup_type"`
+		Storage    string  `json:"storage"`
+		Size       float64 `json:"size"`
+	}{
+		DBType:     "mysql",
+		BackupType: "full",
+		Storage:    "local",
+		Size:       float64(fileSize),
+	}).Post("http://localhost:8085/backups/size")
+
+	fmt.Println("File size sent to monitoring service:", fileSize)
+	if err != nil {
+		fmt.Println("Error sending request:", err)
+		util.CallWebHook("Error sending request: "+err.Error(), true)
+	}
+
 	util.CallWebHook("Backup created successfully at: "+fileName, false)
 	fmt.Printf("Backup successfully created at: %s\n", fileName)
 	return nil

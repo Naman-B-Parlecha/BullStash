@@ -5,11 +5,13 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Naman-B-Parlecha/BullStash/mongo"
 	"github.com/Naman-B-Parlecha/BullStash/mysql"
 	"github.com/Naman-B-Parlecha/BullStash/postgres"
 	"github.com/Naman-B-Parlecha/BullStash/util"
+	"github.com/go-resty/resty/v2"
 	"github.com/spf13/cobra"
 )
 
@@ -17,7 +19,7 @@ import (
 var restoreCmd = &cobra.Command{
 	Use:   "restore",
 	Short: "A brief description of your command",
-	Long:  ``,
+	Long:  `Restore your database using this command`,
 	Run: func(cmd *cobra.Command, args []string) {
 		dbtype, _ := cmd.Flags().GetString("dbtype")
 		host, _ := cmd.Flags().GetString("host")
@@ -30,17 +32,46 @@ var restoreCmd = &cobra.Command{
 		isDrop, _ := cmd.Flags().GetBool("drop")
 		iscompressed, _ := cmd.Flags().GetBool("IsCompressed")
 
+		start := time.Now()
+
+		client := resty.New()
 		if dbtype == "" {
 			util.CallWebHook("Please enter a valid database type", true)
 			fmt.Println("Enter a valid Database Type")
+			_, err := client.R().SetBody(struct {
+				DBType  string `json:"dbtype"`
+				Storage string `json:"storage"`
+			}{
+				DBType:  "Unknown",
+				Storage: "local",
+			}).Post("http://localhost:8085/restore/failure")
+
+			if err != nil {
+				fmt.Println("Error sending request:", err)
+				util.CallWebHook("Error sending request: "+err.Error(), true)
+			}
 			return
 		}
 
-		if dbname == "postgres" {
+		if dbtype == "postgres" {
 			err := postgres.Restore(dbname, input, host, user, password, port)
 			if err != nil {
 				util.CallWebHook("Error restoring database: "+err.Error(), true)
 				fmt.Printf("Error restoring database: %v\n", err)
+
+				_, err := client.R().SetBody(struct {
+					DBType  string `json:"dbtype"`
+					Storage string `json:"storage"`
+				}{
+					DBType:  dbtype,
+					Storage: "local",
+				}).Post("http://localhost:8085/restore/failure")
+
+				if err != nil {
+					fmt.Println("Error sending request:", err)
+					util.CallWebHook("Error sending request: "+err.Error(), true)
+				}
+				return
 			}
 		}
 
@@ -49,6 +80,20 @@ var restoreCmd = &cobra.Command{
 			if err != nil {
 				util.CallWebHook("Error restoring database: "+err.Error(), true)
 				fmt.Printf("Error restoring database: %v\n", err)
+
+				_, err := client.R().SetBody(struct {
+					DBType  string `json:"dbtype"`
+					Storage string `json:"storage"`
+				}{
+					DBType:  dbtype,
+					Storage: "local",
+				}).Post("http://localhost:8085/restore/failure")
+
+				if err != nil {
+					fmt.Println("Error sending request:", err)
+					util.CallWebHook("Error sending request: "+err.Error(), true)
+				}
+				return
 			}
 		}
 
@@ -57,8 +102,52 @@ var restoreCmd = &cobra.Command{
 			if err != nil {
 				util.CallWebHook("Error restoring database: "+err.Error(), true)
 				fmt.Printf("Error restoring database: %v\n", err)
+				_, err := client.R().SetBody(struct {
+					DBType  string `json:"dbtype"`
+					Storage string `json:"storage"`
+				}{
+					DBType:  dbtype,
+					Storage: "local",
+				}).Post("http://localhost:8085/restore/failure")
+
+				if err != nil {
+					fmt.Println("Error sending request:", err)
+					util.CallWebHook("Error sending request: "+err.Error(), true)
+				}
+				return
 			}
 		}
+
+		_, err := client.R().SetBody(struct {
+			DBType  string `json:"dbtype"`
+			Storage string `json:"storage"`
+		}{
+			DBType:  dbtype,
+			Storage: "local",
+		}).Post("http://localhost:8085/restore/success")
+
+		if err != nil {
+			fmt.Println("Error sending request:", err)
+			util.CallWebHook("Error sending request: "+err.Error(), true)
+		}
+
+		end := time.Since(start)
+		fmt.Println("Time taken to restore the database:", end.Milliseconds())
+		_, err = client.R().SetBody(struct {
+			DBType   string  `json:"dbtype"`
+			Storage  string  `json:"storage"`
+			Duration float64 `json:"duration"`
+		}{
+			DBType:   dbtype,
+			Storage:  "local",
+			Duration: float64(end.Milliseconds()),
+		}).Post("http://localhost:8085/restore/duration")
+
+		if err != nil {
+			fmt.Println("Error sending request:", err)
+			util.CallWebHook("Error sending request: "+err.Error(), true)
+		}
+
 	},
 }
 
