@@ -27,13 +27,13 @@ func loadMySQLDb(dbname string, user string, password string) (*sql.DB, error) {
 
 	db, err := sql.Open("mysql", mysqlInfo)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer db.Close()
 
 	err = db.Ping()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return db, nil
