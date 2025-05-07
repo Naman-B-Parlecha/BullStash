@@ -122,13 +122,13 @@ BullStash notify --discord-webhook=https://discord.com/api/webhooks/your-webhook
 ### **Milestone 1: Core Functionality**
 - [X] Implement basic CLI structure using Golang.
 - [X] Add support for connecting PostgreSQL.
-- [ ] Add support for connecting to MySQL
+- [X] Add support for connecting to MySQL
 - [X] Implement full backup functionality for supported databases.
 - [X] Add local storage option for backup files.
 - [X] Implement basic error handling and logging.
 
 ### **Milestone 2: Advanced Backup Features**
-- [ ] Add support for MongoDB and SQLite.
+- [X] Add support for MongoDB and SQLite.
 - [ ] Implement incremental and differential backups.
 - [X] Add compression for backup files (e.g., using gzip).
 - [X] Implement connection testing for databases.
@@ -141,11 +141,11 @@ BullStash notify --discord-webhook=https://discord.com/api/webhooks/your-webhook
 
 ### **Milestone 4: Notifications and Monitoring**
 - [X] Integrate Discord webhooks for backup status notifications.
-- [ ] Add Prometheus metrics for monitoring backup operations.
-- [ ] Set up Grafana dashboards for visualizing backup performance and status.
+- [X] Add Prometheus metrics for monitoring backup operations.
+- [X] Set up Grafana dashboards for visualizing backup performance and status.
 
 ### **Milestone 5: Restore Functionality**
-- [ ] Implement restore functionality for all supported databases.
+- [X] Implement restore functionality for all supported databases.
 - [ ] Add selective restore options for tables or collections (if supported by the DBMS).
 - [ ] Test restore operations with large databases for reliability.
 
@@ -161,7 +161,7 @@ BullStash notify --discord-webhook=https://discord.com/api/webhooks/your-webhook
 - [ ] Add support for additional DBMS (e.g., Oracle, Cassandra).
 - [ ] Implement encryption for backup files.
 - [ ] Add support for Slack notifications alongside Discord.
-- [ ] Create a Docker image for easy deployment.
+- [X] Create a Docker image for easy deployment.
 
 ---
 

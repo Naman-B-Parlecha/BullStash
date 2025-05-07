@@ -9,10 +9,15 @@ import (
 	"time"
 
 	"github.com/Naman-B-Parlecha/BullStash/util"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/go-resty/resty/v2"
+	"github.com/joho/godotenv"
 )
 
-func Backup(output, dbname, host, user, password string, port int, compress bool) error {
+func Backup(output, dbname, host, user, password string, port int, compress bool, storage string) error {
 
 	projectDir, err := os.Getwd()
 
@@ -94,6 +99,47 @@ func Backup(output, dbname, host, user, password string, port int, compress bool
 		return nil
 	}
 
+	// read the file and put it to the bucket if it cloud storage
+
+	if storage == "cloud" {
+
+		godotenv.Load(".env")
+		awsAccessKey := os.Getenv("CLOUD_ACCESS_KEY")
+		awsSecretKey := os.Getenv("CLOUD_SECRET_KEY")
+		awsBucketName := os.Getenv("CLOUD_BUCKET")
+		awsBucketRegion := os.Getenv("CLOUD_REGION")
+
+		sess, err := session.NewSession(&aws.Config{
+			Region:      aws.String(awsBucketRegion),
+			Credentials: credentials.NewStaticCredentials(awsAccessKey, awsSecretKey, ""),
+		})
+
+		if err != nil {
+			util.CallWebHook("Error creating AWS session: "+err.Error(), true)
+			fmt.Printf("Error creating AWS session: %v\n", err)
+			return err
+		}
+		s3Client := s3.New(sess)
+
+		file, err := os.Open(fileName)
+		if err != nil {
+			util.CallWebHook("Error opening file: "+err.Error(), true)
+			fmt.Printf("Error opening file: %v\n", err)
+		}
+
+		defer file.Close()
+		_, err = s3Client.PutObject(&s3.PutObjectInput{
+			Bucket: aws.String(awsBucketName),
+			Key:    aws.String(fileName),
+		})
+
+		if err != nil {
+			util.CallWebHook("Error uploading file to S3: "+err.Error(), true)
+			fmt.Printf("Error uploading file to S3: %v\n", err)
+			return err
+		}
+	}
+
 	client := resty.New()
 	fileInfo, err := os.Stat(fileName)
 	if err != nil {
@@ -121,5 +167,13 @@ func Backup(output, dbname, host, user, password string, port int, compress bool
 
 	util.CallWebHook("Backup created successfully at: "+fileName, false)
 	fmt.Printf("Backup successfully created at: %s\n", fileName)
+
+	if storage == "cloud" {
+		if err := os.Remove(fileName); err != nil {
+			util.CallWebHook("Error removing local file: "+err.Error(), true)
+			fmt.Printf("Warning: could not remove local file: %v\n", err)
+		}
+	}
+
 	return nil
 }

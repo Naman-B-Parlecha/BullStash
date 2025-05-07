@@ -33,6 +33,7 @@ var backupCmd = &cobra.Command{
 		compress, _ := cmd.Flags().GetBool("compress")
 		isCron, _ := cmd.Flags().GetBool("isCron")
 		mongoURI, _ := cmd.Flags().GetString("mongo-uri")
+		storage, _ := cmd.Flags().GetString("storage")
 
 		start := time.Now()
 		client := resty.New()
@@ -67,7 +68,7 @@ var backupCmd = &cobra.Command{
 				dbname = postgresConfig.DBNAME
 			}
 
-			err := postgres.Backup(output, dbname, host, user, password, port, compress)
+			err := postgres.Backup(output, dbname, host, user, password, port, compress, storage)
 			if err != nil {
 				util.CallWebHook("Error creating backup: "+err.Error(), true)
 				fmt.Printf("Error creating backup: %v\n", err)
@@ -97,7 +98,7 @@ var backupCmd = &cobra.Command{
 				dbname = mysqlConfig.DBNAME
 			}
 
-			err := mysql.Backup(output, dbname, user, password, compress)
+			err := mysql.Backup(output, dbname, user, password, compress, storage)
 
 			if err != nil {
 				util.CallWebHook("Error creating backup: "+err.Error(), true)

@@ -30,7 +30,7 @@ var restoreCmd = &cobra.Command{
 		input, _ := cmd.Flags().GetString("input")
 		mongo_uri, _ := cmd.Flags().GetString("mongo-uri")
 		isDrop, _ := cmd.Flags().GetBool("drop")
-		iscompressed, _ := cmd.Flags().GetBool("IsCompressed")
+		iscompressed, _ := cmd.Flags().GetBool("isCompressed")
 
 		start := time.Now()
 
