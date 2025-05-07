@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Naman-B-Parlecha/BullStash/util"
+	"github.com/go-resty/resty/v2"
 )
 
 func Backup(uri, dbName, outputDir string, isCompressed bool) error {
@@ -50,6 +51,31 @@ func Backup(uri, dbName, outputDir string, isCompressed bool) error {
 		fmt.Println(errorMsg)
 		util.CallWebHook(errorMsg, true)
 		return fmt.Errorf("%s", errorMsg)
+	}
+
+	client := resty.New()
+	fileInfo, err := os.Stat(backupFolder)
+	if err != nil {
+		fmt.Printf("Error getting file size: %v\n", err)
+	}
+	fileSize := fileInfo.Size()
+
+	_, err = client.R().SetBody(struct {
+		DBType     string  `json:"dbtype"`
+		BackupType string  `json:"backup_type"`
+		Storage    string  `json:"storage"`
+		Size       float64 `json:"size"`
+	}{
+		DBType:     "mongo",
+		BackupType: "full",
+		Storage:    "local",
+		Size:       float64(fileSize),
+	}).Post("http://localhost:8085/backups/size")
+
+	fmt.Println("File size sent to monitoring service:", fileSize)
+	if err != nil {
+		fmt.Println("Error sending request:", err)
+		util.CallWebHook("Error sending request: "+err.Error(), true)
 	}
 
 	successMsg := fmt.Sprintf("MongoDB backup created successfully at: %s", backupFolder)

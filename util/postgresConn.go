@@ -3,6 +3,8 @@ package util
 import (
 	"database/sql"
 	"fmt"
+
+	_ "github.com/lib/pq"
 )
 
 func LoadPostgresDb(port int, dbname string, host string, user string, password string) (*sql.DB, error) {
@@ -12,13 +14,13 @@ func LoadPostgresDb(port int, dbname string, host string, user string, password 
 
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 	defer db.Close()
 
 	err = db.Ping()
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 
 	return db, nil

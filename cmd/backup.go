@@ -6,19 +6,21 @@ package cmd
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/Naman-B-Parlecha/BullStash/internal/config"
 	"github.com/Naman-B-Parlecha/BullStash/mongo"
 	"github.com/Naman-B-Parlecha/BullStash/mysql"
 	"github.com/Naman-B-Parlecha/BullStash/postgres"
 	"github.com/Naman-B-Parlecha/BullStash/util"
+	"github.com/go-resty/resty/v2"
 	"github.com/spf13/cobra"
 )
 
 // backupCmd represents the backup command
 var backupCmd = &cobra.Command{
 	Use:   "backup",
-	Short: "",
+	Short: "Backup Your database using this command",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		dbtype, _ := cmd.Flags().GetString("dbtype")
@@ -31,13 +33,31 @@ var backupCmd = &cobra.Command{
 		compress, _ := cmd.Flags().GetBool("compress")
 		isCron, _ := cmd.Flags().GetBool("isCron")
 		mongoURI, _ := cmd.Flags().GetString("mongo-uri")
+
+		start := time.Now()
+		client := resty.New()
+
 		if dbtype == "" {
 			util.CallWebHook("Please enter a valid database type", true)
 			fmt.Println("Enter a valid Database Type")
+			_, err := client.R().SetBody(struct {
+				DBType     string `json:"dbtype"`
+				BackupType string `json:"backup_type"`
+				Storage    string `json:"storage"`
+			}{
+				DBType:     "Unknown",
+				BackupType: "full",
+				Storage:    "local",
+			}).Post("http://localhost:8085/backups/failure")
+
+			if err != nil {
+				fmt.Println("Error sending request:", err)
+				util.CallWebHook("Error sending request: "+err.Error(), true)
+			}
 			return
 		}
 
-		if dbname == "postgres" {
+		if dbtype == "postgres" {
 			if isCron {
 				postgresConfig := config.GetPostgresConfig()
 				host = postgresConfig.HOST
@@ -51,6 +71,20 @@ var backupCmd = &cobra.Command{
 			if err != nil {
 				util.CallWebHook("Error creating backup: "+err.Error(), true)
 				fmt.Printf("Error creating backup: %v\n", err)
+				_, err := client.R().SetBody(struct {
+					DBType     string `json:"dbtype"`
+					BackupType string `json:"backup_type"`
+					Storage    string `json:"storage"`
+				}{
+					DBType:     dbtype,
+					BackupType: "full",
+					Storage:    "local",
+				}).Post("http://localhost:8085/backups/failure")
+
+				if err != nil {
+					fmt.Println("Error sending request:", err)
+					util.CallWebHook("Error sending request: "+err.Error(), true)
+				}
 			}
 		}
 
@@ -68,6 +102,21 @@ var backupCmd = &cobra.Command{
 			if err != nil {
 				util.CallWebHook("Error creating backup: "+err.Error(), true)
 				fmt.Printf("Error creating backup: %v\n", err)
+
+				_, err := client.R().SetBody(struct {
+					DBType     string `json:"dbtype"`
+					BackupType string `json:"backup_type"`
+					Storage    string `json:"storage"`
+				}{
+					DBType:     dbtype,
+					BackupType: "full",
+					Storage:    "local",
+				}).Post("http://localhost:8085/backups/failure")
+
+				if err != nil {
+					fmt.Println("Error sending request:", err)
+					util.CallWebHook("Error sending request: "+err.Error(), true)
+				}
 			}
 		}
 
@@ -81,8 +130,54 @@ var backupCmd = &cobra.Command{
 			if err != nil {
 				util.CallWebHook("Error creating backup: "+err.Error(), true)
 				fmt.Printf("Error creating backup: %v\n", err)
-			}
 
+				_, err := client.R().SetBody(struct {
+					DBType     string `json:"dbtype"`
+					BackupType string `json:"backup_type"`
+					Storage    string `json:"storage"`
+				}{
+					DBType:     dbtype,
+					BackupType: "full",
+					Storage:    "local",
+				}).Post("http://localhost:8085/backups/failure")
+
+				if err != nil {
+					fmt.Println("Error sending request:", err)
+					util.CallWebHook("Error sending request: "+err.Error(), true)
+				}
+			}
+		}
+		_, err := client.R().SetBody(struct {
+			DBType     string `json:"dbtype"`
+			BackupType string `json:"backup_type"`
+			Storage    string `json:"storage"`
+		}{
+			DBType:     dbtype,
+			BackupType: "full",
+			Storage:    "local",
+		}).Post("http://localhost:8085/backups/success")
+
+		if err != nil {
+			fmt.Println("Error sending request:", err)
+			util.CallWebHook("Error sending request: "+err.Error(), true)
+		}
+
+		end := time.Since(start)
+		_, err = client.R().SetBody(struct {
+			DBType     string  `json:"dbtype"`
+			BackupType string  `json:"backup_type"`
+			Storage    string  `json:"storage"`
+			Duration   float64 `json:"duration"`
+		}{
+			DBType:     dbtype,
+			BackupType: "full",
+			Storage:    "local",
+			Duration:   float64(end.Milliseconds()),
+		}).Post("http://localhost:8085/backups/duration")
+
+		if err != nil {
+			fmt.Println("Error sending request:", err)
+			util.CallWebHook("Error sending request: "+err.Error(), true)
 		}
 	},
 }

@@ -16,7 +16,7 @@ import (
 // postgresCmd represents the postgres command
 var postgresCmd = &cobra.Command{
 	Use:   "postgres",
-	Short: "",
+	Short: "Add your postgres credential to env for easy backups",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		host, _ := cmd.Flags().GetString("host")

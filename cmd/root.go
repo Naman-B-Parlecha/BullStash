@@ -13,9 +13,17 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "BullStash",
-	Short: "",
+	Short: "A CLI tool for automated managing of your database backups and restores.",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(`
+██████╗ ██╗   ██╗██╗     ██╗      ███████╗████████╗ █████╗ ███████╗██╗  ██╗
+██╔══██╗██║   ██║██║     ██║      ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║  ██║
+██████╔╝██║   ██║██║     ██║      ███████╗   ██║   ███████║███████╗███████║
+██╔══██╗██║   ██║██║     ██║	  ╚════██║   ██║   ██╔══██║╚════██║██╔══██║
+██████╔╝╚██████╔╝███████╗███████╗ ███████║   ██║   ██║  ██║███████║██║  ██║
+╚═════╝  ╚═════╝ ╚══════╝╚══════╝ ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
+		`)
 		fmt.Println("Welcome to BullStash! A CLI tool for managing your database backups and restores.")
 	},
 
