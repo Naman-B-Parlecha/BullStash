@@ -5,13 +5,22 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/Naman-B-Parlecha/BullStash/mongo"
 	"github.com/Naman-B-Parlecha/BullStash/mysql"
 	"github.com/Naman-B-Parlecha/BullStash/postgres"
 	"github.com/Naman-B-Parlecha/BullStash/util"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/go-resty/resty/v2"
+	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 )
 
@@ -31,7 +40,94 @@ var restoreCmd = &cobra.Command{
 		mongo_uri, _ := cmd.Flags().GetString("mongo-uri")
 		isDrop, _ := cmd.Flags().GetBool("drop")
 		iscompressed, _ := cmd.Flags().GetBool("isCompressed")
+		storage, _ := cmd.Flags().GetString("storage")
 
+		if storage == "cloud" {
+			// first i will list all the items so that i can get the file name
+			// then i will download the file to a temp location
+			// then i will restore the file
+
+			godotenv.Load(".env")
+			awsAccessKey := os.Getenv("CLOUD_ACCESS_KEY")
+			awsSecretKey := os.Getenv("CLOUD_SECRET_KEY")
+			awsBucketName := os.Getenv("CLOUD_BUCKET")
+			awsBucketRegion := os.Getenv("CLOUD_REGION")
+
+			sess, err := session.NewSession(&aws.Config{
+				Region:      aws.String(awsBucketRegion),
+				Credentials: credentials.NewStaticCredentials(awsAccessKey, awsSecretKey, ""),
+			})
+
+			if err != nil {
+				util.CallWebHook("Error creating AWS session: "+err.Error(), true)
+				fmt.Println("Error creating AWS session:", err)
+				return
+			}
+
+			s3Client := s3.New(sess)
+
+			resp, err := s3Client.ListObjectsV2(&s3.ListObjectsV2Input{
+				Bucket: aws.String(awsBucketName),
+			})
+
+			if err != nil {
+				util.CallWebHook("Error listing S3 objects: "+err.Error(), true)
+				fmt.Println("Error listing S3 objects:", err)
+				return
+			}
+
+			for _, item := range resp.Contents {
+				fmt.Println("File Name: ", *item.Key)
+			}
+
+			downloader := s3manager.NewDownloader(sess)
+
+			fmt.Printf("Enter the file name to download: ")
+			var fileName string
+			fmt.Scanln(&fileName)
+
+			if fileName == "" {
+				util.CallWebHook("Please enter a valid file name", true)
+				fmt.Println("Enter a valid file name")
+				return
+			}
+
+			filePath := fileName
+
+			if strings.Contains(fileName, "/") {
+				dirPath := filepath.Dir(fileName)
+				if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+					err := os.MkdirAll(dirPath, 0755)
+					if err != nil {
+						util.CallWebHook("Error creating directories: "+err.Error(), true)
+						fmt.Println("Error creating directories:", err)
+						return
+					}
+				}
+			}
+			file, err := os.Create(filePath)
+			if err != nil {
+				util.CallWebHook("Error creating file: "+err.Error(), true)
+				fmt.Println("Error creating file:", err)
+				return
+			}
+			defer file.Close()
+			_, err = downloader.Download(file,
+				&s3.GetObjectInput{
+					Bucket: aws.String(awsBucketName),
+					Key:    aws.String(fileName),
+				})
+			if err != nil {
+				util.CallWebHook("Error downloading file: "+err.Error(), true)
+				fmt.Println("Error downloading file:", err)
+				return
+			}
+
+			fmt.Printf("Successfully downloaded %s to %s\n", fileName, filePath)
+			util.CallWebHook(fmt.Sprintf("Successfully downloaded %s to %s", fileName, filePath), false)
+
+			input = filePath
+		}
 		start := time.Now()
 
 		client := resty.New()
@@ -163,7 +259,7 @@ func init() {
 	restoreCmd.Flags().Bool("drop", true, "do u want to drop ur mongo collections before restore??")
 	restoreCmd.Flags().String("mongo-uri", "", "MongoDB URI that u want to restore to")
 	restoreCmd.Flags().Bool("isCompressed", false, "Is your dump files compressed")
-
+	restoreCmd.Flags().String("storage", "local", "Storage type")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
