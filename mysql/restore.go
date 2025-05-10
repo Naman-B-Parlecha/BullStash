@@ -14,13 +14,11 @@ func Restore(dbname, input, user, password string) error {
 
 	if _, err := os.Stat(input); os.IsNotExist(err) {
 		errorMsg := fmt.Sprintf("Input file not found: %s", input)
-		util.CallWebHook(errorMsg, true)
 		return fmt.Errorf("%s", errorMsg)
 	}
 
 	sqlFile, err := os.Open(input)
 	if err != nil {
-		util.CallWebHook("Error opening SQL file: "+err.Error(), true)
 		return fmt.Errorf("error opening SQL file: %w", err)
 	}
 	defer sqlFile.Close()
@@ -41,12 +39,11 @@ func Restore(dbname, input, user, password string) error {
 			errorMsg = err.Error()
 		}
 		fullError := fmt.Sprintf("Failed to restore database: %s", errorMsg)
-		util.CallWebHook(fullError, true)
 		return fmt.Errorf("%s", fullError)
 	}
 
 	successMsg := fmt.Sprintf("Database %s restored successfully from %s", dbname, input)
 	util.CallWebHook(successMsg, false)
-	fmt.Println(successMsg)
+	util.SuccessColor.Println(successMsg)
 	return nil
 }

@@ -47,16 +47,16 @@ func SendToDiscord(webhook string, message *DiscordMessage) error {
 
 func CallWebHook(text string, isError bool) {
 	if err := godotenv.Load(); err != nil {
-		fmt.Println("No .env file found")
+		WarningColor.Println("No .env file found")
 	}
 	webhookURL, exists := os.LookupEnv("DISCORD_WEBHOOK_URL")
 
 	if !exists {
-		fmt.Printf("discord webhook not set")
+		WarningColor.Println("discord webhook not set")
 	}
 
 	if webhookURL == "" {
-		fmt.Println("Discord webhook URL is empty. Skipping webhook call.")
+		WarningColor.Println("Discord webhook URL is empty. Skipping webhook call.")
 		return
 	}
 
@@ -80,6 +80,6 @@ func CallWebHook(text string, isError bool) {
 	}
 
 	if err := SendToDiscord(webhookURL, message); err != nil {
-		fmt.Printf("Failed to send to Discord: %v\n", err)
+		ErrorColor.Printf("Failed to send to Discord: %v\n", err)
 	}
 }

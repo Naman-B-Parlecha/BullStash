@@ -20,12 +20,11 @@ func Restore(dbname, input, host, user, password string, port int) error {
 	restoreCmd.Env = append(restoreCmd.Env, "PGPASSWORD="+password)
 
 	if err := restoreCmd.Run(); err != nil {
-		util.CallWebHook("Failed to restore database: "+err.Error(), true)
-		fmt.Printf("Failed to restore database: %v\n", err)
-		return err
+		return fmt.Errorf("failed to restore database: %v", err)
 	}
 
-	util.CallWebHook("Database restored successfully", false)
-	fmt.Println("Database restored successfully")
+	successMsg := fmt.Sprintf("Database %s restored successfully from %s", dbname, input)
+	util.CallWebHook(successMsg, false)
+	util.SuccessColor.Println(successMsg)
 	return nil
 }

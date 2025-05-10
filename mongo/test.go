@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Naman-B-Parlecha/BullStash/util"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -30,7 +29,5 @@ func TestConnection(mongoURI string) error {
 		return fmt.Errorf("ping failed: %v", err)
 	}
 
-	successMsg := fmt.Sprintf("MongoDB connection established successfully to: %s", clientOptions.GetURI())
-	util.CallWebHook(successMsg, false)
 	return nil
 }
