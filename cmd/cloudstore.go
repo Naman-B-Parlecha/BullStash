@@ -25,17 +25,17 @@ var cloudstoreCmd = &cobra.Command{
 		secretKey, _ := cmd.Flags().GetString("secret-key")
 
 		if region == "" || bucket == "" || accessKey == "" || secretKey == "" {
-			fmt.Println("All flags (region, bucket, access-key, secret-key) are required.")
+			util.WarningColor.Println("All flags (region, bucket, access-key, secret-key) are required.")
 			return
 		}
-		fmt.Printf("Region: %s\n", region)
-		fmt.Printf("Bucket: %s\n", bucket)
-		fmt.Printf("Access Key: %s\n", accessKey)
-		fmt.Printf("Secret Key: %s\n", secretKey)
+		util.SuccessColor.Printf("Region: %s\n", region)
+		util.SuccessColor.Printf("Bucket: %s\n", bucket)
+		util.SuccessColor.Printf("Access Key: %s\n", accessKey)
+		util.SuccessColor.Printf("Secret Key: %s\n", secretKey)
 
 		fileContent, err := os.ReadFile(".env")
 		if err != nil {
-			fmt.Println("Error reading .env file:", err)
+			util.ErrorColor.Println("Error reading .env file:", err)
 			return
 		}
 		content := string(fileContent)
@@ -50,11 +50,11 @@ var cloudstoreCmd = &cobra.Command{
 
 		err = os.WriteFile(".env", []byte(content), 0644)
 		if err != nil {
-			fmt.Println("Error writing to .env file:", err)
+			util.SuccessColor.Println("Error writing to .env file:", err)
 			return
 		}
 
-		fmt.Printf("Cloud storage configuration added to .env file:\n")
+		util.SuccessColor.Printf("Cloud storage configuration added to .env file:\n")
 		util.CallWebHook("Cloud storage configuration added to .env file:\n", false)
 	},
 }

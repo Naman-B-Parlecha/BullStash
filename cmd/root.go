@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Naman-B-Parlecha/BullStash/util"
 	"github.com/spf13/cobra"
 )
 
@@ -24,7 +25,7 @@ var rootCmd = &cobra.Command{
 ██████╔╝╚██████╔╝███████╗███████╗ ███████║   ██║   ██║  ██║███████║██║  ██║
 ╚═════╝  ╚═════╝ ╚══════╝╚══════╝ ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
 		`)
-		fmt.Println("Welcome to BullStash! A CLI tool for managing your database backups and restores.")
+		util.InfoColor.Println("Welcome to BullStash! A CLI tool for managing your database backups and restores.")
 	},
 
 	// Uncomment the following line if your bare application

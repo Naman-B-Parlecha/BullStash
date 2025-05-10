@@ -19,27 +19,27 @@ var scheduleCmd = &cobra.Command{
 	Short: "Schedule Your database backups using this command",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Scheduling a backup job...")
+		util.InfoColor.Println("Scheduling a backup job...")
 		dbType, _ := cmd.Flags().GetString("dbtype")
 		backupType, _ := cmd.Flags().GetString("backuptype")
 		// outputDir, _ := cmd.Flags().GetString("output")
 		cron, _ := cmd.Flags().GetString("cron")
 
-		fmt.Println("Kindly put your values in env variables so that we can fetch from there using commands such as BullStash postgres... use --help for more details")
-		fmt.Print("Do you want to continue? (y/n): ")
+		util.InfoColor.Println("Kindly put your values in env variables so that we can fetch from there using commands such as BullStash postgres... use --help for more details")
+		util.InfoColor.Println("Do you want to continue? (y/n): ")
 		var answer string
 		fmt.Scanln(&answer)
 
 		if answer != "y" && answer != "Y" {
 			util.CallWebHook("User cancelled the backup scheduling", true)
-			fmt.Println("Operation cancelled")
+			util.WarningColor.Println("Operation cancelled")
 			return
 		}
 
 		projectDir, err := os.Getwd()
 		if err != nil {
 			util.CallWebHook("Error getting current directory: "+err.Error(), true)
-			fmt.Println("Error getting current directory:", err)
+			util.ErrorColor.Println("Error getting current directory:", err)
 			return
 		}
 
@@ -47,7 +47,7 @@ var scheduleCmd = &cobra.Command{
 			dirPath := filepath.Join(projectDir, dir)
 			if err := os.MkdirAll(dirPath, 0755); err != nil && !os.IsExist(err) {
 				util.CallWebHook("Error creating directory: "+err.Error(), true)
-				fmt.Printf("Error creating directory %s: %v\n", dirPath, err)
+				util.ErrorColor.Printf("Error creating directory %s: %v\n", dirPath, err)
 				return
 			}
 		}
@@ -56,7 +56,7 @@ var scheduleCmd = &cobra.Command{
 		file, err := os.Create(scriptPath)
 		if err != nil {
 			util.CallWebHook("Error creating script file: "+err.Error(), true)
-			fmt.Println("Error creating script file:", err)
+			util.ErrorColor.Println("Error creating script file:", err)
 			return
 		}
 		defer file.Close()
@@ -75,13 +75,13 @@ echo "[$(date)] Backup completed." >> "%s/cron_logs_%s/backup.log"
 
 		if _, err := file.WriteString(scriptContent); err != nil {
 			util.CallWebHook("Error writing to script file: "+err.Error(), true)
-			fmt.Println("Error writing to file:", err)
+			util.ErrorColor.Println("Error writing to file:", err)
 			return
 		}
 
 		if err := os.Chmod(scriptPath, 0755); err != nil {
 			util.CallWebHook("Error changing file permissions: "+err.Error(), true)
-			fmt.Println("Error changing file permissions:", err)
+			util.ErrorColor.Println("Error changing file permissions:", err)
 			return
 		}
 
@@ -97,15 +97,15 @@ echo "[$(date)] Backup completed." >> "%s/cron_logs_%s/backup.log"
 
 		if output, err := addCronCmd.CombinedOutput(); err != nil {
 			util.CallWebHook("Failed to add cron job: "+err.Error(), true)
-			fmt.Printf("Failed to add cron job: %v\n", err)
-			fmt.Printf("Command output: %s\n", string(output))
+			util.ErrorColor.Printf("Failed to add cron job: %v\n", err)
+			util.ErrorColor.Printf("Command output: %s\n", string(output))
 			return
 		}
 
 		util.CallWebHook("Backup job scheduled successfully", false)
-		fmt.Println("Successfully scheduled backup with cron expression:", cron)
-		fmt.Println("Script location:", scriptPath)
-		fmt.Println("Logs will be written to:", filepath.Join(projectDir, fmt.Sprintf("cron_logs_%s/backup.log", dbType)))
+		util.SuccessColor.Println("Successfully scheduled backup with cron expression:", cron)
+		util.SuccessColor.Println("Script location:", scriptPath)
+		util.SuccessColor.Println("Logs will be written to:", filepath.Join(projectDir, fmt.Sprintf("cron_logs_%s/backup.log", dbType)))
 	},
 }
 

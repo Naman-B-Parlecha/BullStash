@@ -27,10 +27,10 @@ var postgresCmd = &cobra.Command{
 
 		if name == "" {
 			util.CallWebHook("Please enter a valid database name", true)
-			fmt.Println("Enter a valid Dabtabase Name")
+			util.WarningColor.Println("Enter a valid Dabtabase Name")
 			return
 		}
-		fmt.Println("Kindly Confirm the following details :"+"\n"+"Host: "+host+"\n"+"Password: "+password+"\n"+"User: "+user+"\n"+"Name: "+name+"\n"+"Port: ", port, "\n\nEnter y/n to confirm")
+		util.InfoColor.Println("Kindly Confirm the following details :"+"\n"+"Host: "+host+"\n"+"Password: "+password+"\n"+"User: "+user+"\n"+"Name: "+name+"\n"+"Port: ", port, "\n\nEnter y/n to confirm")
 
 		var confirm string
 		fmt.Scanln(&confirm)
@@ -51,7 +51,7 @@ var postgresCmd = &cobra.Command{
 		file, err := os.Create(".env")
 		if err != nil {
 			util.CallWebHook("Failed to save your database details, try again", true)
-			fmt.Println("Failed to save your database details, try again")
+			util.ErrorColor.Println("Failed to save your database details, try again")
 			return
 		}
 
@@ -68,11 +68,12 @@ var postgresCmd = &cobra.Command{
 
 		if _, err := file.WriteString(content); err != nil {
 			util.CallWebHook("Failed to write database details to file, try again", true)
-			fmt.Println("Failed to write database details to file, try again")
+			util.ErrorColor.Println("Failed to write database details to file, try again")
 			return
 		}
 		defer file.Close()
 		util.CallWebHook("Database details saved successfully", false)
+		util.SuccessColor.Println("Database details saved successfully to .env file.")
 	},
 }
 

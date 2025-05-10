@@ -43,10 +43,6 @@ var restoreCmd = &cobra.Command{
 		storage, _ := cmd.Flags().GetString("storage")
 
 		if storage == "cloud" {
-			// first i will list all the items so that i can get the file name
-			// then i will download the file to a temp location
-			// then i will restore the file
-
 			godotenv.Load(".env")
 			awsAccessKey := os.Getenv("CLOUD_ACCESS_KEY")
 			awsSecretKey := os.Getenv("CLOUD_SECRET_KEY")
@@ -60,7 +56,7 @@ var restoreCmd = &cobra.Command{
 
 			if err != nil {
 				util.CallWebHook("Error creating AWS session: "+err.Error(), true)
-				fmt.Println("Error creating AWS session:", err)
+				util.ErrorColor.Println("Error creating AWS session:", err)
 				return
 			}
 
@@ -72,23 +68,23 @@ var restoreCmd = &cobra.Command{
 
 			if err != nil {
 				util.CallWebHook("Error listing S3 objects: "+err.Error(), true)
-				fmt.Println("Error listing S3 objects:", err)
+				util.ErrorColor.Println("Error listing S3 objects:", err)
 				return
 			}
 
 			for _, item := range resp.Contents {
-				fmt.Println("File Name: ", *item.Key)
+				util.InfoColor.Println("•     File Name: ", *item.Key)
 			}
 
 			downloader := s3manager.NewDownloader(sess)
 
-			fmt.Printf("Enter the file name to download: ")
+			util.SuccessColor.Printf("Enter the file name to download: ")
 			var fileName string
 			fmt.Scanln(&fileName)
 
 			if fileName == "" {
 				util.CallWebHook("Please enter a valid file name", true)
-				fmt.Println("Enter a valid file name")
+				util.ErrorColor.Println("Enter a valid file name")
 				return
 			}
 
@@ -100,7 +96,7 @@ var restoreCmd = &cobra.Command{
 					err := os.MkdirAll(dirPath, 0755)
 					if err != nil {
 						util.CallWebHook("Error creating directories: "+err.Error(), true)
-						fmt.Println("Error creating directories:", err)
+						util.ErrorColor.Println("Error creating directories:", err)
 						return
 					}
 				}
@@ -108,7 +104,7 @@ var restoreCmd = &cobra.Command{
 			file, err := os.Create(filePath)
 			if err != nil {
 				util.CallWebHook("Error creating file: "+err.Error(), true)
-				fmt.Println("Error creating file:", err)
+				util.ErrorColor.Println("Error creating file:", err)
 				return
 			}
 			defer file.Close()
@@ -119,11 +115,11 @@ var restoreCmd = &cobra.Command{
 				})
 			if err != nil {
 				util.CallWebHook("Error downloading file: "+err.Error(), true)
-				fmt.Println("Error downloading file:", err)
+				util.ErrorColor.Println("Error downloading file:", err)
 				return
 			}
 
-			fmt.Printf("Successfully downloaded %s to %s\n", fileName, filePath)
+			util.SuccessColor.Printf("Successfully downloaded %s to %s\n", fileName, filePath)
 			util.CallWebHook(fmt.Sprintf("Successfully downloaded %s to %s", fileName, filePath), false)
 
 			input = filePath
@@ -133,7 +129,7 @@ var restoreCmd = &cobra.Command{
 		client := resty.New()
 		if dbtype == "" {
 			util.CallWebHook("Please enter a valid database type", true)
-			fmt.Println("Enter a valid Database Type")
+			util.ErrorColor.Println("Enter a valid Database Type")
 			_, err := client.R().SetBody(struct {
 				DBType  string `json:"dbtype"`
 				Storage string `json:"storage"`
@@ -143,7 +139,7 @@ var restoreCmd = &cobra.Command{
 			}).Post("http://localhost:8085/restore/failure")
 
 			if err != nil {
-				fmt.Println("Error sending request:", err)
+				util.ErrorColor.Println("Error sending request:", err)
 				util.CallWebHook("Error sending request: "+err.Error(), true)
 			}
 			return
@@ -153,7 +149,7 @@ var restoreCmd = &cobra.Command{
 			err := postgres.Restore(dbname, input, host, user, password, port)
 			if err != nil {
 				util.CallWebHook("Error restoring database: "+err.Error(), true)
-				fmt.Printf("Error restoring database: %v\n", err)
+				util.ErrorColor.Printf("Error restoring database: %v\n", err)
 
 				_, err := client.R().SetBody(struct {
 					DBType  string `json:"dbtype"`
@@ -164,7 +160,7 @@ var restoreCmd = &cobra.Command{
 				}).Post("http://localhost:8085/restore/failure")
 
 				if err != nil {
-					fmt.Println("Error sending request:", err)
+					util.ErrorColor.Println("Error sending request:", err)
 					util.CallWebHook("Error sending request: "+err.Error(), true)
 				}
 				return
@@ -175,7 +171,7 @@ var restoreCmd = &cobra.Command{
 			err := mysql.Restore(dbname, input, user, password)
 			if err != nil {
 				util.CallWebHook("Error restoring database: "+err.Error(), true)
-				fmt.Printf("Error restoring database: %v\n", err)
+				util.ErrorColor.Printf("Error restoring database: %v\n", err)
 
 				_, err := client.R().SetBody(struct {
 					DBType  string `json:"dbtype"`
@@ -186,7 +182,7 @@ var restoreCmd = &cobra.Command{
 				}).Post("http://localhost:8085/restore/failure")
 
 				if err != nil {
-					fmt.Println("Error sending request:", err)
+					util.ErrorColor.Println("Error sending request:", err)
 					util.CallWebHook("Error sending request: "+err.Error(), true)
 				}
 				return
@@ -197,7 +193,7 @@ var restoreCmd = &cobra.Command{
 			err := mongo.Restore(mongo_uri, input, isDrop, iscompressed)
 			if err != nil {
 				util.CallWebHook("Error restoring database: "+err.Error(), true)
-				fmt.Printf("Error restoring database: %v\n", err)
+				util.ErrorColor.Printf("Error restoring database: %v\n", err)
 				_, err := client.R().SetBody(struct {
 					DBType  string `json:"dbtype"`
 					Storage string `json:"storage"`
@@ -207,7 +203,7 @@ var restoreCmd = &cobra.Command{
 				}).Post("http://localhost:8085/restore/failure")
 
 				if err != nil {
-					fmt.Println("Error sending request:", err)
+					util.ErrorColor.Println("Error sending request:", err)
 					util.CallWebHook("Error sending request: "+err.Error(), true)
 				}
 				return
@@ -223,12 +219,12 @@ var restoreCmd = &cobra.Command{
 		}).Post("http://localhost:8085/restore/success")
 
 		if err != nil {
-			fmt.Println("Error sending request:", err)
+			util.ErrorColor.Println("Error sending request:", err)
 			util.CallWebHook("Error sending request: "+err.Error(), true)
 		}
 
 		end := time.Since(start)
-		fmt.Println("Time taken to restore the database:", end.Milliseconds())
+		util.InfoColor.Println("Time taken to restore the database:", end.Milliseconds())
 		_, err = client.R().SetBody(struct {
 			DBType   string  `json:"dbtype"`
 			Storage  string  `json:"storage"`
@@ -240,10 +236,9 @@ var restoreCmd = &cobra.Command{
 		}).Post("http://localhost:8085/restore/duration")
 
 		if err != nil {
-			fmt.Println("Error sending request:", err)
+			util.ErrorColor.Println("Error sending request:", err)
 			util.CallWebHook("Error sending request: "+err.Error(), true)
 		}
-
 	},
 }
 

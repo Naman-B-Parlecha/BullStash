@@ -4,7 +4,6 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
 	"strconv"
 	"time"
 
@@ -40,7 +39,7 @@ var backupCmd = &cobra.Command{
 
 		if dbtype == "" {
 			util.CallWebHook("Please enter a valid database type", true)
-			fmt.Println("Enter a valid Database Type")
+			util.ErrorColor.Println("Enter a valid Database Type")
 			_, err := client.R().SetBody(struct {
 				DBType     string `json:"dbtype"`
 				BackupType string `json:"backup_type"`
@@ -52,11 +51,13 @@ var backupCmd = &cobra.Command{
 			}).Post("http://localhost:8085/backups/failure")
 
 			if err != nil {
-				fmt.Println("Error sending request:", err)
+				util.ErrorColor.Println("Error sending request:", err)
 				util.CallWebHook("Error sending request: "+err.Error(), true)
 			}
 			return
 		}
+
+		util.InfoColor.Printf("Creating backup for %s database \n", dbtype)
 
 		if dbtype == "postgres" {
 			if isCron {
@@ -71,7 +72,7 @@ var backupCmd = &cobra.Command{
 			err := postgres.Backup(output, dbname, host, user, password, port, compress, storage)
 			if err != nil {
 				util.CallWebHook("Error creating backup: "+err.Error(), true)
-				fmt.Printf("Error creating backup: %v\n", err)
+				util.ErrorColor.Printf("Error creating backup: %v\n", err)
 				_, err := client.R().SetBody(struct {
 					DBType     string `json:"dbtype"`
 					BackupType string `json:"backup_type"`
@@ -83,14 +84,13 @@ var backupCmd = &cobra.Command{
 				}).Post("http://localhost:8085/backups/failure")
 
 				if err != nil {
-					fmt.Println("Error sending request:", err)
+					util.ErrorColor.Println("Error sending request:", err)
 					util.CallWebHook("Error sending request: "+err.Error(), true)
 				}
 			}
 		}
 
 		if dbtype == "mysql" {
-			fmt.Println("Creating backup for MySQL database")
 			if isCron {
 				mysqlConfig := config.GetMySqlConfig()
 				user = mysqlConfig.USER
@@ -102,7 +102,7 @@ var backupCmd = &cobra.Command{
 
 			if err != nil {
 				util.CallWebHook("Error creating backup: "+err.Error(), true)
-				fmt.Printf("Error creating backup: %v\n", err)
+				util.ErrorColor.Printf("Error creating backup: %v\n", err)
 
 				_, err := client.R().SetBody(struct {
 					DBType     string `json:"dbtype"`
@@ -115,7 +115,7 @@ var backupCmd = &cobra.Command{
 				}).Post("http://localhost:8085/backups/failure")
 
 				if err != nil {
-					fmt.Println("Error sending request:", err)
+					util.ErrorColor.Println("Error sending request:", err)
 					util.CallWebHook("Error sending request: "+err.Error(), true)
 				}
 			}
@@ -130,7 +130,7 @@ var backupCmd = &cobra.Command{
 			err := mongo.Backup(mongoURI, dbname, output, compress)
 			if err != nil {
 				util.CallWebHook("Error creating backup: "+err.Error(), true)
-				fmt.Printf("Error creating backup: %v\n", err)
+				util.ErrorColor.Printf("Error creating backup: %v\n", err)
 
 				_, err := client.R().SetBody(struct {
 					DBType     string `json:"dbtype"`
@@ -143,7 +143,7 @@ var backupCmd = &cobra.Command{
 				}).Post("http://localhost:8085/backups/failure")
 
 				if err != nil {
-					fmt.Println("Error sending request:", err)
+					util.ErrorColor.Println("Error sending request:", err)
 					util.CallWebHook("Error sending request: "+err.Error(), true)
 				}
 			}
@@ -159,7 +159,7 @@ var backupCmd = &cobra.Command{
 		}).Post("http://localhost:8085/backups/success")
 
 		if err != nil {
-			fmt.Println("Error sending request:", err)
+			util.ErrorColor.Println("Error sending request:", err)
 			util.CallWebHook("Error sending request: "+err.Error(), true)
 		}
 
@@ -177,7 +177,7 @@ var backupCmd = &cobra.Command{
 		}).Post("http://localhost:8085/backups/duration")
 
 		if err != nil {
-			fmt.Println("Error sending request:", err)
+			util.ErrorColor.Println("Error sending request:", err)
 			util.CallWebHook("Error sending request: "+err.Error(), true)
 		}
 	},

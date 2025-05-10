@@ -4,10 +4,10 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
+	"github.com/Naman-B-Parlecha/BullStash/util"
 	"github.com/spf13/cobra"
 )
 
@@ -19,13 +19,13 @@ var notifyCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		discordWebhook, _ := cmd.Flags().GetString("discord")
 		if discordWebhook == "" {
-			fmt.Println("Please provide a Discord webhook URL.")
+			util.WarningColor.Println("Please provide a Discord webhook URL.")
 			return
 		}
 
 		filecontent, err := os.ReadFile(".env")
 		if err != nil {
-			fmt.Println("Error reading .env file:", err)
+			util.ErrorColor.Println("Error reading .env file:", err)
 			return
 		}
 		content := string(filecontent)
@@ -36,12 +36,12 @@ var notifyCmd = &cobra.Command{
 
 		err = os.WriteFile(".env", []byte(content), 0644)
 		if err != nil {
-			fmt.Println("Error writing to .env file:", err)
+			util.ErrorColor.Println("Error writing to .env file:", err)
 			return
 		}
 
-		fmt.Printf("Notification will be sent to Discord webhook: %s\n", discordWebhook)
-		fmt.Println("WebHook added successfully!")
+		util.SuccessColor.Printf("Notification will be sent to Discord webhook: %s\n", discordWebhook)
+		util.SuccessColor.Println("WebHook added successfully!")
 	},
 }
 

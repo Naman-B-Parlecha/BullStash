@@ -22,12 +22,12 @@ var mongoCmd = &cobra.Command{
 		dbname, _ := cmd.Flags().GetString("dbname")
 
 		if mongoURI == "" || dbname == "" {
-			fmt.Println("Please provide a valid MongoDB URI and database name.")
+			util.ErrorColor.Printf("Please provide a valid MongoDB URI and database name.")
 			util.CallWebHook("Please provide a valid MongoDB URI and database name.", true)
 			return
 		}
 
-		fmt.Println("Kindly Confirm the following details :"+"\n"+" mongo-uri = "+mongoURI+"\n", "dbname = "+dbname, "\n\nEnter y/n to confirm")
+		util.InfoColor.Printf("Kindly Confirm the following details :"+"\n"+" mongo-uri = "+mongoURI+"\n", "dbname = "+dbname, "\n\nEnter y/n to confirm")
 
 		var confirm string
 		fmt.Scanln(&confirm)
@@ -47,7 +47,7 @@ var mongoCmd = &cobra.Command{
 		file, err := os.Create(".env")
 		if err != nil {
 			util.CallWebHook("Failed to save your database details, try again", true)
-			fmt.Println("Failed to save your database details, try again")
+			util.ErrorColor.Printf("Failed to save your database details, try again")
 			return
 		}
 
@@ -60,11 +60,11 @@ var mongoCmd = &cobra.Command{
 		content += "MONGO_DB_NAME=" + dbname + "\n"
 		if _, err := file.WriteString(content); err != nil {
 			util.CallWebHook("Failed to write database details to file, try again", true)
-			fmt.Println("Failed to write database details to file, try again")
+			util.ErrorColor.Printf("Failed to write database details to file, try again")
 			return
 		}
 		defer file.Close()
-		fmt.Println("Database details saved successfully to .env file.")
+		util.SuccessColor.Printf("Database details saved successfully to .env file.")
 		util.CallWebHook("Database details saved successfully", false)
 	},
 }

@@ -4,7 +4,6 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/Naman-B-Parlecha/BullStash/mongo"
@@ -21,7 +20,7 @@ var testCmd = &cobra.Command{
 	Short: "",
 	Long:  `Test your database connectivity using this command`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("checking connection to database")
+		util.InfoColor.Println("checking connection to database")
 		dbtype, _ := cmd.Flags().GetString("dbtype")
 		host, _ := cmd.Flags().GetString("host")
 		port, _ := cmd.Flags().GetInt("port")
@@ -35,7 +34,7 @@ var testCmd = &cobra.Command{
 
 		if dbtype == "" {
 			util.CallWebHook("Database type not specified", true)
-			fmt.Println("Database type not specified")
+			util.WarningColor.Println("Database type not specified")
 
 			_, err := client.R().SetBody(struct {
 				DBType string `json:"dbtype"`
@@ -44,7 +43,7 @@ var testCmd = &cobra.Command{
 			}).Post("http://localhost:8085/connections/failure")
 
 			if err != nil {
-				fmt.Println("Error sending request:", err)
+				util.ErrorColor.Println("Error sending request:", err)
 				util.CallWebHook("Error sending request: "+err.Error(), true)
 			}
 			return
@@ -53,7 +52,7 @@ var testCmd = &cobra.Command{
 			err := postgres.TestConnection(port, dbname, host, user, password)
 			if err != nil {
 				util.CallWebHook("Error connecting to database: "+err.Error(), true)
-				fmt.Printf("Error connecting to database: %v\n", err)
+				util.ErrorColor.Printf("Error connecting to database: %v\n", err)
 				_, err := client.R().SetBody(struct {
 					DBType string `json:"dbtype"`
 				}{
@@ -61,20 +60,20 @@ var testCmd = &cobra.Command{
 				}).Post("http://localhost:8085/connections/failure")
 
 				if err != nil {
-					fmt.Println("Error sending request:", err)
+					util.ErrorColor.Println("Error sending request:", err)
 					util.CallWebHook("Error sending request: "+err.Error(), true)
 				}
 				return
 			} else {
 				util.CallWebHook("Database connection successful", false)
-				fmt.Println("Database connection successful")
+				util.SuccessColor.Println("Database connection successful")
 			}
 		}
 		if dbtype == "mysql" {
 			err := mysql.TestConnection(dbname, user, password)
 			if err != nil {
 				util.CallWebHook("Error connecting to database: "+err.Error(), true)
-				fmt.Printf("Error connecting to database: %v\n", err)
+				util.ErrorColor.Printf("Error connecting to database: %v\n", err)
 				_, err := client.R().SetBody(struct {
 					DBType string `json:"dbtype"`
 				}{
@@ -82,13 +81,13 @@ var testCmd = &cobra.Command{
 				}).Post("http://localhost:8085/connections/failure")
 
 				if err != nil {
-					fmt.Println("Error sending request:", err)
+					util.ErrorColor.Println("Error sending request:", err)
 					util.CallWebHook("Error sending request: "+err.Error(), true)
 				}
 				return
 			} else {
 				util.CallWebHook("Database connection successful", false)
-				fmt.Println("Database connection successful")
+				util.SuccessColor.Println("Database connection successful")
 			}
 		}
 
@@ -96,7 +95,7 @@ var testCmd = &cobra.Command{
 			err := mongo.TestConnection(mongoURI)
 			if err != nil {
 				util.CallWebHook("Error connecting to database: "+err.Error(), true)
-				fmt.Printf("Error connecting to database: %v\n", err)
+				util.ErrorColor.Printf("Error connecting to database: %v\n", err)
 				_, err := client.R().SetBody(struct {
 					DBType string `json:"dbtype"`
 				}{
@@ -104,13 +103,13 @@ var testCmd = &cobra.Command{
 				}).Post("http://localhost:8085/connections/failure")
 
 				if err != nil {
-					fmt.Println("Error sending request:", err)
+					util.ErrorColor.Println("Error sending request:", err)
 					util.CallWebHook("Error sending request: "+err.Error(), true)
 				}
 				return
 			} else {
 				util.CallWebHook("Database connection successful", false)
-				fmt.Println("Database connection successful")
+				util.SuccessColor.Println("Database connection successful")
 			}
 		}
 
@@ -121,7 +120,7 @@ var testCmd = &cobra.Command{
 		}).Post("http://localhost:8085/connections/success")
 
 		if err != nil {
-			fmt.Println("Error sending request:", err)
+			util.ErrorColor.Println("Error sending request:", err)
 			util.CallWebHook("Error sending request: "+err.Error(), true)
 		}
 
@@ -136,7 +135,7 @@ var testCmd = &cobra.Command{
 		}).Post("http://localhost:8085/connections/latency")
 
 		if err != nil {
-			fmt.Println("Error sending request:", err)
+			util.ErrorColor.Println("Error sending request:", err)
 			util.CallWebHook("Error sending request: "+err.Error(), true)
 		}
 
