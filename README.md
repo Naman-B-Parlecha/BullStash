@@ -135,8 +135,8 @@ BullStash notify --discord-webhook=https://discord.com/api/webhooks/your-webhook
 - [X] Implement Restore command
 
 ### **Milestone 3: Cloud Integration**
-- [ ] Add support for cloud storage (AWS S3, Google Cloud Storage, Azure Blob Storage).
-- [ ] Implement configuration file for storing cloud credentials and settings.
+- [X] Add support for cloud storage (AWS S3, Google Cloud Storage, Azure Blob Storage).
+- [X] Implement configuration file for storing cloud credentials and settings.
 - [X] Add functionality to schedule backups using cron-like syntax.
 
 ### **Milestone 4: Notifications and Monitoring**
@@ -151,7 +151,7 @@ BullStash notify --discord-webhook=https://discord.com/api/webhooks/your-webhook
 
 ### **Milestone 6: Optimization and Documentation**
 - [ ] Optimize backup and restore operations for large databases.
-- [ ] Add comprehensive documentation for CLI usage and configuration.
+- [X] Add comprehensive documentation for CLI usage and configuration.
 - [ ] Perform cross-platform testing (Windows, Linux, macOS).
 - [ ] Write unit tests and integration tests for all features.
 
